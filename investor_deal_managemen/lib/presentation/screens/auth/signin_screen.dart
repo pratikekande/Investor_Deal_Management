@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:investor_deal_managemen/presentation/screens/auth/signup_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -25,15 +26,14 @@ class _SignInScreenState extends State<SignInScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.15),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-    );
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
     _fadeController.forward();
   }
 
@@ -58,11 +58,7 @@ class _SignInScreenState extends State<SignInScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0D1B3E),
-              Color(0xFF0A0F2C),
-              Color(0xFF060B1E),
-            ],
+            colors: [Color(0xFF0D1B3E), Color(0xFF0A0F2C), Color(0xFF060B1E)],
           ),
         ),
         child: SafeArea(
@@ -71,9 +67,7 @@ class _SignInScreenState extends State<SignInScreen>
             child: SlideTransition(
               position: _slideAnimation,
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: deviceWidth * 0.06,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.06),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -84,15 +78,11 @@ class _SignInScreenState extends State<SignInScreen>
                       width: deviceWidth * 0.22,
                       height: deviceWidth * 0.22,
                       decoration: BoxDecoration(
-                        borderRadius:
-                            BorderRadius.circular(deviceWidth * 0.04),
+                        borderRadius: BorderRadius.circular(deviceWidth * 0.04),
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF1E3A8A),
-                            Color(0xFF3B82F6),
-                          ],
+                          colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -117,7 +107,6 @@ class _SignInScreenState extends State<SignInScreen>
 
                     SizedBox(height: deviceHeight * 0.02),
 
-                    // App name
                     Text(
                       'DEALFLOW',
                       style: TextStyle(
@@ -130,7 +119,6 @@ class _SignInScreenState extends State<SignInScreen>
 
                     SizedBox(height: deviceHeight * 0.04),
 
-                    // Welcome text
                     Text(
                       'Welcome Back',
                       style: TextStyle(
@@ -153,7 +141,6 @@ class _SignInScreenState extends State<SignInScreen>
 
                     SizedBox(height: deviceHeight * 0.045),
 
-                    // Email field
                     _buildTextField(
                       controller: _emailController,
                       hint: 'Enter your email',
@@ -164,7 +151,6 @@ class _SignInScreenState extends State<SignInScreen>
 
                     SizedBox(height: deviceHeight * 0.018),
 
-                    // Password field
                     _buildTextField(
                       controller: _passwordController,
                       hint: 'Enter your password',
@@ -174,15 +160,12 @@ class _SignInScreenState extends State<SignInScreen>
                       isPassword: true,
                       obscureText: _obscurePassword,
                       onTogglePassword: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
+                        setState(() => _obscurePassword = !_obscurePassword);
                       },
                     ),
 
                     SizedBox(height: deviceHeight * 0.012),
 
-                    // Forgot password
                     Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
@@ -200,20 +183,15 @@ class _SignInScreenState extends State<SignInScreen>
 
                     SizedBox(height: deviceHeight * 0.035),
 
-                    // Sign In button
                     GestureDetector(
                       onTap: _isLoading ? null : _handleSignIn,
                       child: Container(
                         width: deviceWidth,
                         height: deviceHeight * 0.068,
                         decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.circular(deviceWidth * 0.04),
+                          borderRadius: BorderRadius.circular(deviceWidth * 0.04),
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF1E3A8A),
-                              Color(0xFF3B82F6),
-                            ],
+                            colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -248,18 +226,13 @@ class _SignInScreenState extends State<SignInScreen>
 
                     SizedBox(height: deviceHeight * 0.045),
 
-                    // Trust & Security divider
                     Row(
                       children: [
-                        Expanded(
-                          child: Divider(
-                            color: const Color(0xFF1E2A45),
-                            thickness: 1,
-                          ),
+                        const Expanded(
+                          child: Divider(color: Color(0xFF1E2A45), thickness: 1),
                         ),
                         Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: deviceWidth * 0.03),
+                          padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.03),
                           child: Text(
                             'TRUST & SECURITY',
                             style: TextStyle(
@@ -270,18 +243,14 @@ class _SignInScreenState extends State<SignInScreen>
                             ),
                           ),
                         ),
-                        Expanded(
-                          child: Divider(
-                            color: const Color(0xFF1E2A45),
-                            thickness: 1,
-                          ),
+                        const Expanded(
+                          child: Divider(color: Color(0xFF1E2A45), thickness: 1),
                         ),
                       ],
                     ),
 
                     SizedBox(height: deviceHeight * 0.03),
 
-                    // Register row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -294,7 +263,15 @@ class _SignInScreenState extends State<SignInScreen>
                         ),
                         GestureDetector(
                           onTap: () {
-                            // TODO: Navigate to SignUp screen
+                            // Zero-duration transition eliminates lag
+                            Navigator.of(context).push(
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation, secondaryAnimation) =>
+                                    const SignUpScreen(),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
+                              ),
+                            );
                           },
                           child: Text(
                             'Register',
@@ -309,43 +286,6 @@ class _SignInScreenState extends State<SignInScreen>
                     ),
 
                     SizedBox(height: deviceHeight * 0.06),
-
-                    // Fast Login button
-                    Container(
-                      width: deviceWidth * 0.72,
-                      height: deviceHeight * 0.062,
-                      decoration: BoxDecoration(
-                        borderRadius:
-                            BorderRadius.circular(deviceWidth * 0.08),
-                        color: const Color(0xFF1E2A45),
-                        border: Border.all(
-                          color: const Color(0xFF2A3A55),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.fingerprint_rounded,
-                            color: const Color(0xFF94A3B8),
-                            size: deviceWidth * 0.055,
-                          ),
-                          SizedBox(width: deviceWidth * 0.02),
-                          Text(
-                            'FAST LOGIN ACTIVE',
-                            style: TextStyle(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: deviceWidth * 0.032,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.02),
                   ],
                 ),
               ),
@@ -372,19 +312,12 @@ class _SignInScreenState extends State<SignInScreen>
       decoration: BoxDecoration(
         color: const Color(0xFF1E2A45),
         borderRadius: BorderRadius.circular(deviceWidth * 0.035),
-        border: Border.all(
-          color: const Color(0xFF2A3A55),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF2A3A55), width: 1),
       ),
       child: Row(
         children: [
           SizedBox(width: deviceWidth * 0.04),
-          Icon(
-            prefixIcon,
-            color: const Color(0xFF94A3B8),
-            size: deviceWidth * 0.052,
-          ),
+          Icon(prefixIcon, color: const Color(0xFF94A3B8), size: deviceWidth * 0.052),
           SizedBox(width: deviceWidth * 0.03),
           Expanded(
             child: TextField(
@@ -393,10 +326,7 @@ class _SignInScreenState extends State<SignInScreen>
               keyboardType: isPassword
                   ? TextInputType.visiblePassword
                   : TextInputType.emailAddress,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: deviceWidth * 0.04,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: deviceWidth * 0.04),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
@@ -439,13 +369,9 @@ class _SignInScreenState extends State<SignInScreen>
     }
 
     setState(() => _isLoading = true);
-
-    // Simulate API delay
     await Future.delayed(const Duration(milliseconds: 1500));
-
     setState(() => _isLoading = false);
 
     // TODO: Connect to AuthBloc
-    // context.read<AuthBloc>().add(SignInEvent(...));
   }
 }

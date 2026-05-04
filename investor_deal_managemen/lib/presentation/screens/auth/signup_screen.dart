@@ -12,18 +12,14 @@ class _SignUpScreenState extends State<SignUpScreen>
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
 
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
   bool _isLoading = false;
-  String _selectedRole = 'Investor'; // 'Investor' or 'Corporate'
+  String _selectedRole = 'Investor';
 
   late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  late List<Animation<double>> _itemAnimations;
 
   @override
   void initState() {
@@ -32,15 +28,18 @@ class _SignUpScreenState extends State<SignUpScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-    );
+
+    _itemAnimations = List.generate(5, (i) {
+      final start = i * 0.12;
+      final end = (start + 0.45).clamp(0.0, 1.0);
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _fadeController,
+          curve: Interval(start, end, curve: Curves.easeOut),
+        ),
+      );
+    });
+
     _fadeController.forward();
   }
 
@@ -50,19 +49,35 @@ class _SignUpScreenState extends State<SignUpScreen>
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Widget _animated(int index, Widget child) {
+    return AnimatedBuilder(
+      animation: _itemAnimations[index],
+      builder: (context, _) {
+        final v = _itemAnimations[index].value;
+        return Opacity(
+          opacity: v,
+          child: Transform.translate(
+            offset: Offset(0, 16 * (1 - v)),
+            child: child,
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final double deviceWidth = MediaQuery.of(context).size.width;
-    final double deviceHeight = MediaQuery.of(context).size.height;
+    final double w = MediaQuery.of(context).size.width;
+    final double h = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
-        width: deviceWidth,
-        height: deviceHeight,
+        width: w,
+        height: h,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -75,347 +90,334 @@ class _SignUpScreenState extends State<SignUpScreen>
           ),
         ),
         child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Column(
-                children: [
-                  // Top App Bar
-                  _buildAppBar(deviceWidth, deviceHeight),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: w * 0.06),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: h * 0.03),
 
-                  // Divider
-                  Divider(
-                    color: const Color(0xFF1E2A45),
-                    thickness: 1,
-                    height: 1,
-                  ),
-
-                  // Scrollable content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: deviceWidth * 0.06,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: deviceHeight * 0.03),
-
-                          // Header
-                          Text(
-                            'Create Account',
+                // Logo + App Name
+                _animated(
+                  0,
+                  Column(
+                    children: [
+                      Container(
+                        width: w * 0.16,
+                        height: w * 0.16,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(w * 0.036),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withOpacity(0.35),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            'DF',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: deviceWidth * 0.075,
+                              fontSize: w * 0.058,
                               fontWeight: FontWeight.w800,
+                              letterSpacing: 2,
                             ),
                           ),
+                        ),
+                      ),
+                      SizedBox(height: h * 0.01),
+                      Text(
+                        'DEALFLOW',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w * 0.045,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                          SizedBox(height: deviceHeight * 0.008),
+                SizedBox(height: h * 0.022),
 
-                          Text(
-                            'Join DealFlow and start your investment journey',
-                            style: TextStyle(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: deviceWidth * 0.038,
-                              fontWeight: FontWeight.w400,
+                // Header
+                _animated(
+                  1,
+                  Column(
+                    children: [
+                      Text(
+                        'Create Account',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w * 0.062,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: h * 0.005),
+                      Text(
+                        'Join DealFlow and start your investment journey',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: const Color(0xFF94A3B8),
+                          fontSize: w * 0.033,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: h * 0.022),
+
+                // Role selection
+                _animated(
+                  2,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'I AM A...',
+                        style: TextStyle(
+                          color: const Color(0xFF94A3B8),
+                          fontSize: w * 0.028,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      SizedBox(height: h * 0.01),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildRoleCard(
+                              role: 'Investor',
+                              icon: Icons.person_outline_rounded,
+                              w: w,
+                              h: h,
                             ),
                           ),
-
-                          SizedBox(height: deviceHeight * 0.03),
-
-                          // Role label
-                          Text(
-                            'I AM A...',
-                            style: TextStyle(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: deviceWidth * 0.032,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.5,
+                          SizedBox(width: w * 0.04),
+                          Expanded(
+                            child: _buildRoleCard(
+                              role: 'Corporate',
+                              icon: Icons.business_outlined,
+                              w: w,
+                              h: h,
                             ),
                           ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
-                          SizedBox(height: deviceHeight * 0.015),
+                SizedBox(height: h * 0.022),
 
-                          // Role selection cards
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildRoleCard(
-                                  role: 'Investor',
-                                  icon: Icons.person_outline_rounded,
-                                  deviceWidth: deviceWidth,
-                                  deviceHeight: deviceHeight,
-                                ),
-                              ),
-                              SizedBox(width: deviceWidth * 0.04),
-                              Expanded(
-                                child: _buildRoleCard(
-                                  role: 'Corporate',
-                                  icon: Icons.business_outlined,
-                                  deviceWidth: deviceWidth,
-                                  deviceHeight: deviceHeight,
-                                ),
-                              ),
-                            ],
-                          ),
+                // Form fields
+                _animated(
+                  3,
+                  Column(
+                    children: [
+                      _buildTextField(
+                        controller: _nameController,
+                        hint: 'Full Name',
+                        prefixIcon: Icons.person_outline_rounded,
+                        w: w,
+                        h: h,
+                        keyboardType: TextInputType.name,
+                      ),
+                      SizedBox(height: h * 0.014),
+                      _buildTextField(
+                        controller: _emailController,
+                        hint: 'Email Address',
+                        prefixIcon: Icons.mail_outline_rounded,
+                        w: w,
+                        h: h,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      SizedBox(height: h * 0.014),
+                      _buildTextField(
+                        controller: _passwordController,
+                        hint: 'Password',
+                        prefixIcon: Icons.lock_outline_rounded,
+                        w: w,
+                        h: h,
+                        isPassword: true,
+                        obscureText: _obscurePassword,
+                        onTogglePassword: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                    ],
+                  ),
+                ),
 
-                          SizedBox(height: deviceHeight * 0.03),
+                SizedBox(height: h * 0.018),
 
-                          // Full Name field
-                          _buildTextField(
-                            controller: _nameController,
-                            hint: 'Full Name',
-                            prefixIcon: Icons.person_outline_rounded,
-                            deviceWidth: deviceWidth,
-                            deviceHeight: deviceHeight,
-                            keyboardType: TextInputType.name,
-                          ),
-
-                          SizedBox(height: deviceHeight * 0.016),
-
-                          // Email field
-                          _buildTextField(
-                            controller: _emailController,
-                            hint: 'Email Address',
-                            prefixIcon: Icons.mail_outline_rounded,
-                            deviceWidth: deviceWidth,
-                            deviceHeight: deviceHeight,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-
-                          SizedBox(height: deviceHeight * 0.016),
-
-                          // Password field
-                          _buildTextField(
-                            controller: _passwordController,
-                            hint: 'Password',
-                            prefixIcon: Icons.lock_outline_rounded,
-                            deviceWidth: deviceWidth,
-                            deviceHeight: deviceHeight,
-                            isPassword: true,
-                            obscureText: _obscurePassword,
-                            onTogglePassword: () {
-                              setState(
-                                  () => _obscurePassword = !_obscurePassword);
-                            },
-                          ),
-
-                          SizedBox(height: deviceHeight * 0.016),
-
-                          // Confirm Password field
-                          _buildTextField(
-                            controller: _confirmPasswordController,
-                            hint: 'Confirm Password',
-                            prefixIcon: Icons.lock_outline_rounded,
-                            deviceWidth: deviceWidth,
-                            deviceHeight: deviceHeight,
-                            isPassword: true,
-                            obscureText: _obscureConfirmPassword,
-                            onTogglePassword: () {
-                              setState(() => _obscureConfirmPassword =
-                                  !_obscureConfirmPassword);
-                            },
-                          ),
-
-                          SizedBox(height: deviceHeight * 0.025),
-
-                          // Terms & Conditions row
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  setState(
-                                      () => _agreedToTerms = !_agreedToTerms);
-                                },
-                                child: Container(
-                                  width: deviceWidth * 0.055,
-                                  height: deviceWidth * 0.055,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(
-                                        deviceWidth * 0.012),
-                                    border: Border.all(
-                                      color: _agreedToTerms
-                                          ? const Color(0xFF3B82F6)
-                                          : const Color(0xFF94A3B8),
-                                      width: 1.5,
-                                    ),
-                                    color: _agreedToTerms
-                                        ? const Color(0xFF3B82F6)
-                                            .withOpacity(0.2)
-                                        : Colors.transparent,
-                                  ),
-                                  child: _agreedToTerms
-                                      ? Icon(
-                                          Icons.check_rounded,
-                                          color: const Color(0xFF3B82F6),
-                                          size: deviceWidth * 0.038,
-                                        )
-                                      : null,
-                                ),
-                              ),
-                              SizedBox(width: deviceWidth * 0.03),
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: TextStyle(
-                                      color: const Color(0xFF94A3B8),
-                                      fontSize: deviceWidth * 0.036,
-                                      height: 1.5,
-                                    ),
-                                    children: [
-                                      const TextSpan(text: 'I agree to the '),
-                                      TextSpan(
-                                        text: 'Terms & Conditions',
-                                        style: TextStyle(
-                                          color: const Color(0xFF3B82F6),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: deviceWidth * 0.036,
-                                        ),
-                                      ),
-                                      const TextSpan(text: ' and '),
-                                      TextSpan(
-                                        text: 'Privacy Policy',
-                                        style: TextStyle(
-                                          color: const Color(0xFF3B82F6),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: deviceWidth * 0.036,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: deviceHeight * 0.03),
-
-                          // Create Account button
+                // Terms checkbox
+                _animated(
+                  4,
+                  Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
                           GestureDetector(
-                            onTap: _isLoading ? null : _handleSignUp,
-                            child: Container(
-                              width: deviceWidth,
-                              height: deviceHeight * 0.068,
+                            onTap: () =>
+                                setState(() => _agreedToTerms = !_agreedToTerms),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: w * 0.048,
+                              height: w * 0.048,
                               decoration: BoxDecoration(
                                 borderRadius:
-                                    BorderRadius.circular(deviceWidth * 0.04),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF1E3A8A),
-                                    Color(0xFF3B82F6),
-                                  ],
+                                    BorderRadius.circular(w * 0.011),
+                                border: Border.all(
+                                  color: _agreedToTerms
+                                      ? const Color(0xFF3B82F6)
+                                      : const Color(0xFF94A3B8),
+                                  width: 1.5,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF3B82F6)
-                                        .withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
+                                color: _agreedToTerms
+                                    ? const Color(0xFF3B82F6).withOpacity(0.2)
+                                    : Colors.transparent,
+                              ),
+                              child: _agreedToTerms
+                                  ? Icon(
+                                      Icons.check_rounded,
+                                      color: const Color(0xFF3B82F6),
+                                      size: w * 0.032,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          SizedBox(width: w * 0.025),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: const Color(0xFF94A3B8),
+                                  fontSize: w * 0.031,
+                                  height: 1.4,
+                                ),
+                                children: [
+                                  const TextSpan(text: 'I agree to the '),
+                                  TextSpan(
+                                    text: 'Terms & Conditions',
+                                    style: TextStyle(
+                                      color: const Color(0xFF3B82F6),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: w * 0.031,
+                                    ),
+                                  ),
+                                  const TextSpan(text: ' and '),
+                                  TextSpan(
+                                    text: 'Privacy Policy',
+                                    style: TextStyle(
+                                      color: const Color(0xFF3B82F6),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: w * 0.031,
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: Center(
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Text(
-                                        'Create Account',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: deviceWidth * 0.045,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                              ),
                             ),
                           ),
+                        ],
+                      ),
 
-                          SizedBox(height: deviceHeight * 0.03),
+                      SizedBox(height: h * 0.022),
 
-                          // Sign In row
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Already have an account? ',
-                                style: TextStyle(
-                                  color: const Color(0xFF94A3B8),
-                                  fontSize: deviceWidth * 0.038,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  // TODO: Navigate back to SignIn
-                                  Navigator.pop(context);
-                                },
-                                child: Text(
-                                  'Sign In',
-                                  style: TextStyle(
-                                    color: const Color(0xFF3B82F6),
-                                    fontSize: deviceWidth * 0.038,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                      // Create Account button
+                      GestureDetector(
+                        onTap: _isLoading ? null : _handleSignUp,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: w,
+                          height: h * 0.064,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(w * 0.04),
+                            gradient: LinearGradient(
+                              colors: _isLoading
+                                  ? [
+                                      const Color(0xFF1E3A8A).withOpacity(0.6),
+                                      const Color(0xFF3B82F6).withOpacity(0.6),
+                                    ]
+                                  : const [
+                                      Color(0xFF1E3A8A),
+                                      Color(0xFF3B82F6),
+                                    ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    const Color(0xFF3B82F6).withOpacity(0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 5),
                               ),
                             ],
                           ),
+                          child: Center(
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    'Create Account',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: w * 0.042,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
 
-                          SizedBox(height: deviceHeight * 0.03),
+                      SizedBox(height: h * 0.02),
+
+                      // Sign In row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Already have an account? ',
+                            style: TextStyle(
+                              color: const Color(0xFF94A3B8),
+                              fontSize: w * 0.034,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Text(
+                              'Sign In',
+                              style: TextStyle(
+                                color: const Color(0xFF3B82F6),
+                                fontSize: w * 0.034,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar(double deviceWidth, double deviceHeight) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: deviceWidth * 0.04,
-        vertical: deviceHeight * 0.015,
-      ),
-      child: Row(
-        children: [
-          // Back button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Icon(
-              Icons.arrow_back_rounded,
-              color: Colors.white,
-              size: deviceWidth * 0.06,
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'DealFlow',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: deviceWidth * 0.052,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
-          // Empty space to balance back button
-          SizedBox(width: deviceWidth * 0.06),
-        ],
       ),
     );
   }
@@ -423,38 +425,35 @@ class _SignUpScreenState extends State<SignUpScreen>
   Widget _buildRoleCard({
     required String role,
     required IconData icon,
-    required double deviceWidth,
-    required double deviceHeight,
+    required double w,
+    required double h,
   }) {
     final bool isSelected = _selectedRole == role;
-
     return GestureDetector(
       onTap: () => setState(() => _selectedRole = role),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        height: deviceHeight * 0.13,
+        duration: const Duration(milliseconds: 200),
+        height: h * 0.1,
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF1E3A8A).withOpacity(0.3)
               : const Color(0xFF1E2A45),
-          borderRadius: BorderRadius.circular(deviceWidth * 0.035),
+          borderRadius: BorderRadius.circular(w * 0.032),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFF3B82F6)
-                : const Color(0xFF2A3A55),
+            color:
+                isSelected ? const Color(0xFF3B82F6) : const Color(0xFF2A3A55),
             width: isSelected ? 2 : 1,
           ),
         ),
         child: Stack(
           children: [
-            // Checkmark top right
             if (isSelected)
               Positioned(
-                top: deviceWidth * 0.025,
-                right: deviceWidth * 0.025,
+                top: w * 0.02,
+                right: w * 0.02,
                 child: Container(
-                  width: deviceWidth * 0.055,
-                  height: deviceWidth * 0.055,
+                  width: w * 0.045,
+                  height: w * 0.045,
                   decoration: const BoxDecoration(
                     color: Color(0xFF3B82F6),
                     shape: BoxShape.circle,
@@ -462,12 +461,10 @@ class _SignUpScreenState extends State<SignUpScreen>
                   child: Icon(
                     Icons.check_rounded,
                     color: Colors.white,
-                    size: deviceWidth * 0.035,
+                    size: w * 0.028,
                   ),
                 ),
               ),
-
-            // Content
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -477,17 +474,16 @@ class _SignUpScreenState extends State<SignUpScreen>
                     color: isSelected
                         ? const Color(0xFF3B82F6)
                         : const Color(0xFF94A3B8),
-                    size: deviceWidth * 0.08,
+                    size: w * 0.065,
                   ),
-                  SizedBox(height: deviceHeight * 0.008),
+                  SizedBox(height: h * 0.006),
                   Text(
                     role,
                     style: TextStyle(
                       color: isSelected ? Colors.white : const Color(0xFF94A3B8),
-                      fontSize: deviceWidth * 0.04,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
+                      fontSize: w * 0.034,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ],
@@ -503,47 +499,37 @@ class _SignUpScreenState extends State<SignUpScreen>
     required TextEditingController controller,
     required String hint,
     required IconData prefixIcon,
-    required double deviceWidth,
-    required double deviceHeight,
+    required double w,
+    required double h,
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onTogglePassword,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Container(
-      width: deviceWidth,
-      height: deviceHeight * 0.072,
+      width: w,
+      height: h * 0.065,
       decoration: BoxDecoration(
         color: const Color(0xFF1E2A45),
-        borderRadius: BorderRadius.circular(deviceWidth * 0.035),
-        border: Border.all(
-          color: const Color(0xFF2A3A55),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(w * 0.032),
+        border: Border.all(color: const Color(0xFF2A3A55), width: 1),
       ),
       child: Row(
         children: [
-          SizedBox(width: deviceWidth * 0.04),
-          Icon(
-            prefixIcon,
-            color: const Color(0xFF94A3B8),
-            size: deviceWidth * 0.052,
-          ),
-          SizedBox(width: deviceWidth * 0.03),
+          SizedBox(width: w * 0.04),
+          Icon(prefixIcon, color: const Color(0xFF94A3B8), size: w * 0.047),
+          SizedBox(width: w * 0.028),
           Expanded(
             child: TextField(
               controller: controller,
               obscureText: isPassword ? obscureText : false,
               keyboardType: keyboardType,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: deviceWidth * 0.04,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: w * 0.036),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
                   color: const Color(0xFF94A3B8),
-                  fontSize: deviceWidth * 0.04,
+                  fontSize: w * 0.036,
                 ),
                 border: InputBorder.none,
                 isDense: true,
@@ -554,13 +540,13 @@ class _SignUpScreenState extends State<SignUpScreen>
             GestureDetector(
               onTap: onTogglePassword,
               child: Padding(
-                padding: EdgeInsets.only(right: deviceWidth * 0.04),
+                padding: EdgeInsets.only(right: w * 0.04),
                 child: Icon(
                   obscureText
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
                   color: const Color(0xFF94A3B8),
-                  size: deviceWidth * 0.052,
+                  size: w * 0.047,
                 ),
               ),
             ),
@@ -572,50 +558,26 @@ class _SignUpScreenState extends State<SignUpScreen>
   void _handleSignUp() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          backgroundColor: Color(0xFF1E2A45),
-        ),
-      );
-      return;
-    }
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match'),
-          backgroundColor: Color(0xFF1E2A45),
-        ),
-      );
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please fill in all fields'),
+        backgroundColor: Color(0xFF1E2A45),
+      ));
       return;
     }
 
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to Terms & Conditions'),
-          backgroundColor: Color(0xFF1E2A45),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please agree to Terms & Conditions'),
+        backgroundColor: Color(0xFF1E2A45),
+      ));
       return;
     }
 
     setState(() => _isLoading = true);
-
-    // Simulate API delay
     await Future.delayed(const Duration(milliseconds: 1500));
-
     setState(() => _isLoading = false);
 
     // TODO: Connect to AuthBloc
-    // context.read<AuthBloc>().add(SignUpEvent(
-    //   name: _nameController.text,
-    //   email: _emailController.text,
-    //   password: _passwordController.text,
-    //   role: _selectedRole,
-    // ));
   }
 }

@@ -236,9 +236,6 @@ class _DealListingScreenState extends State<DealListingScreen> {
                         },
                       ),
               ),
-
-              // Bottom Navigation Bar
-              _buildBottomNavBar(deviceWidth, deviceHeight),
             ],
           ),
         ),
@@ -283,26 +280,6 @@ class _DealListingScreenState extends State<DealListingScreen> {
                 ),
               ),
             ],
-          ),
-          // Avatar
-          Container(
-            width: deviceWidth * 0.11,
-            height: deviceWidth * 0.11,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFF3B82F6),
-                width: 2,
-              ),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-              ),
-            ),
-            child: Icon(
-              Icons.person_rounded,
-              color: Colors.white,
-              size: deviceWidth * 0.06,
-            ),
           ),
         ],
       ),
@@ -615,60 +592,6 @@ class _DealListingScreenState extends State<DealListingScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar(double deviceWidth, double deviceHeight) {
-    final List<Map<String, dynamic>> navItems = [
-      {'icon': Icons.handshake_outlined, 'label': 'DEALS'},
-      {'icon': Icons.pie_chart_outline_rounded, 'label': 'PORTFOLIO'},
-      {'icon': Icons.insights_rounded, 'label': 'INSIGHTS'},
-      {'icon': Icons.settings_outlined, 'label': 'SETTINGS'},
-    ];
-
-    return Container(
-      height: deviceHeight * 0.09,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E2A45),
-        border: Border(
-          top: BorderSide(color: const Color(0xFF2A3A55), width: 1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(navItems.length, (index) {
-          final bool isActive = _selectedNavIndex == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedNavIndex = index),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  navItems[index]['icon'],
-                  color: isActive
-                      ? const Color(0xFF3B82F6)
-                      : const Color(0xFF94A3B8),
-                  size: deviceWidth * 0.06,
-                ),
-                SizedBox(height: deviceHeight * 0.005),
-                Text(
-                  navItems[index]['label'],
-                  style: TextStyle(
-                    color: isActive
-                        ? const Color(0xFF3B82F6)
-                        : const Color(0xFF94A3B8),
-                    fontSize: deviceWidth * 0.025,
-                    fontWeight: isActive
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:investor_deal_managemen/presentation/screens/auth/signin_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -71,10 +72,14 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     // Navigate after splash
+    // Navigate after splash
     Future.delayed(const Duration(milliseconds: 3200), () {
       if (mounted) {
-        // TODO: Replace with GoRouter navigation
-        // context.go('/signin');
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => SignInScreen(),
+          ),
+        );
       }
     });
   }
