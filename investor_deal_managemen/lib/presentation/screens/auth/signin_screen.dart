@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_event.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_state.dart';
 import 'package:investor_deal_managemen/presentation/screens/auth/signup_screen.dart';
+import 'package:investor_deal_managemen/presentation/screens/corporate/corporate_bottom_nav.dart';
+import 'package:investor_deal_managemen/presentation/screens/investor/investor_bottom_nav.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -13,7 +19,6 @@ class _SignInScreenState extends State<SignInScreen>
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -45,254 +50,336 @@ class _SignInScreenState extends State<SignInScreen>
     super.dispose();
   }
 
+  void _handleSignIn(BuildContext context) {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please fill in all fields',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: const Color(0xFF1E3A8A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(
+          SignInEvent(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double deviceWidth = MediaQuery.of(context).size.width;
     final double deviceHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: Container(
-        width: deviceWidth,
-        height: deviceHeight,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0D1B3E), Color(0xFF0A0F2C), Color(0xFF060B1E)],
-          ),
-        ),
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.06),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: deviceHeight * 0.06),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          Widget destination;
+          if (state.user.role == 'investor') {
+            destination = const InvestorBottomNav();
+          } else if (state.user.role == 'corporate') {
+            destination = const CorporateBottomNav();
+          } else {
+            destination = const InvestorBottomNav();
+          }
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => destination),
+            (route) => false,
+          );
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: const Color(0xFFEF4444),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final bool isLoading = state is AuthLoading;
 
-                    // Logo
-                    Container(
-                      width: deviceWidth * 0.22,
-                      height: deviceWidth * 0.22,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(deviceWidth * 0.04),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF3B82F6).withOpacity(0.3),
-                            blurRadius: 20,
-                            spreadRadius: 2,
+        return Scaffold(
+          body: Container(
+            width: deviceWidth,
+            height: deviceHeight,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF0D1B3E),
+                  Color(0xFF0A0F2C),
+                  Color(0xFF060B1E),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: SingleChildScrollView(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: deviceWidth * 0.06),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(height: deviceHeight * 0.06),
+
+                        // Logo
+                        Container(
+                          width: deviceWidth * 0.22,
+                          height: deviceWidth * 0.22,
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                BorderRadius.circular(deviceWidth * 0.04),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    const Color(0xFF3B82F6).withOpacity(0.3),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          'DF',
+                          child: Center(
+                            child: Text(
+                              'DF',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: deviceWidth * 0.08,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: deviceHeight * 0.02),
+
+                        Text(
+                          'DEALFLOW',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: deviceWidth * 0.08,
+                            fontSize: deviceWidth * 0.055,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 2,
+                            letterSpacing: 4,
                           ),
                         ),
-                      ),
-                    ),
 
-                    SizedBox(height: deviceHeight * 0.02),
+                        SizedBox(height: deviceHeight * 0.04),
 
-                    Text(
-                      'DEALFLOW',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: deviceWidth * 0.055,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 4,
-                      ),
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.04),
-
-                    Text(
-                      'Welcome Back',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: deviceWidth * 0.065,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.008),
-
-                    Text(
-                      'Sign in to explore investment deals',
-                      style: TextStyle(
-                        color: const Color(0xFF94A3B8),
-                        fontSize: deviceWidth * 0.038,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.045),
-
-                    _buildTextField(
-                      controller: _emailController,
-                      hint: 'Enter your email',
-                      prefixIcon: Icons.mail_outline_rounded,
-                      deviceWidth: deviceWidth,
-                      deviceHeight: deviceHeight,
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.018),
-
-                    _buildTextField(
-                      controller: _passwordController,
-                      hint: 'Enter your password',
-                      prefixIcon: Icons.lock_outline_rounded,
-                      deviceWidth: deviceWidth,
-                      deviceHeight: deviceHeight,
-                      isPassword: true,
-                      obscureText: _obscurePassword,
-                      onTogglePassword: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.012),
-
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () {},
-                        child: Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: const Color(0xFF3B82F6),
-                            fontSize: deviceWidth * 0.038,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.035),
-
-                    GestureDetector(
-                      onTap: _isLoading ? null : _handleSignIn,
-                      child: Container(
-                        width: deviceWidth,
-                        height: deviceHeight * 0.068,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(deviceWidth * 0.04),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF3B82F6).withOpacity(0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  'Sign In',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: deviceWidth * 0.045,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.045),
-
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Divider(color: Color(0xFF1E2A45), thickness: 1),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.03),
-                          child: Text(
-                            'TRUST & SECURITY',
-                            style: TextStyle(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: deviceWidth * 0.028,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ),
-                        const Expanded(
-                          child: Divider(color: Color(0xFF1E2A45), thickness: 1),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: deviceHeight * 0.03),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
                         Text(
-                          "Don't have an account? ",
+                          'Welcome Back',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: deviceWidth * 0.065,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+
+                        SizedBox(height: deviceHeight * 0.008),
+
+                        Text(
+                          'Sign in to explore investment deals',
                           style: TextStyle(
                             color: const Color(0xFF94A3B8),
                             fontSize: deviceWidth * 0.038,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            // Zero-duration transition eliminates lag
-                            Navigator.of(context).push(
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) =>
-                                    const SignUpScreen(),
-                                transitionDuration: Duration.zero,
-                                reverseTransitionDuration: Duration.zero,
-                              ),
-                            );
+
+                        SizedBox(height: deviceHeight * 0.045),
+
+                        _buildTextField(
+                          controller: _emailController,
+                          hint: 'Enter your email',
+                          prefixIcon: Icons.mail_outline_rounded,
+                          deviceWidth: deviceWidth,
+                          deviceHeight: deviceHeight,
+                        ),
+
+                        SizedBox(height: deviceHeight * 0.018),
+
+                        _buildTextField(
+                          controller: _passwordController,
+                          hint: 'Enter your password',
+                          prefixIcon: Icons.lock_outline_rounded,
+                          deviceWidth: deviceWidth,
+                          deviceHeight: deviceHeight,
+                          isPassword: true,
+                          obscureText: _obscurePassword,
+                          onTogglePassword: () {
+                            setState(
+                                () => _obscurePassword = !_obscurePassword);
                           },
-                          child: Text(
-                            'Register',
-                            style: TextStyle(
-                              color: const Color(0xFF3B82F6),
-                              fontSize: deviceWidth * 0.038,
-                              fontWeight: FontWeight.w700,
+                        ),
+
+                        SizedBox(height: deviceHeight * 0.012),
+
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: () {},
+                            child: Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: const Color(0xFF3B82F6),
+                                fontSize: deviceWidth * 0.038,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ),
+
+                        SizedBox(height: deviceHeight * 0.035),
+
+                        GestureDetector(
+                          onTap: isLoading
+                              ? null
+                              : () => _handleSignIn(context),
+                          child: Container(
+                            width: deviceWidth,
+                            height: deviceHeight * 0.068,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.circular(deviceWidth * 0.04),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF1E3A8A),
+                                  Color(0xFF3B82F6),
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF3B82F6)
+                                      .withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Sign In',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: deviceWidth * 0.045,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: deviceHeight * 0.045),
+
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Divider(
+                                  color: Color(0xFF1E2A45), thickness: 1),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: deviceWidth * 0.03),
+                              child: Text(
+                                'TRUST & SECURITY',
+                                style: TextStyle(
+                                  color: const Color(0xFF94A3B8),
+                                  fontSize: deviceWidth * 0.028,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ),
+                            const Expanded(
+                              child: Divider(
+                                  color: Color(0xFF1E2A45), thickness: 1),
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: deviceHeight * 0.03),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account? ",
+                              style: TextStyle(
+                                color: const Color(0xFF94A3B8),
+                                fontSize: deviceWidth * 0.038,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const SignUpScreen(),
+                                    transitionDuration: Duration.zero,
+                                    reverseTransitionDuration: Duration.zero,
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Register',
+                                style: TextStyle(
+                                  color: const Color(0xFF3B82F6),
+                                  fontSize: deviceWidth * 0.038,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: deviceHeight * 0.06),
                       ],
                     ),
-
-                    SizedBox(height: deviceHeight * 0.06),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -317,7 +404,8 @@ class _SignInScreenState extends State<SignInScreen>
       child: Row(
         children: [
           SizedBox(width: deviceWidth * 0.04),
-          Icon(prefixIcon, color: const Color(0xFF94A3B8), size: deviceWidth * 0.052),
+          Icon(prefixIcon,
+              color: const Color(0xFF94A3B8), size: deviceWidth * 0.052),
           SizedBox(width: deviceWidth * 0.03),
           Expanded(
             child: TextField(
@@ -326,7 +414,8 @@ class _SignInScreenState extends State<SignInScreen>
               keyboardType: isPassword
                   ? TextInputType.visiblePassword
                   : TextInputType.emailAddress,
-              style: TextStyle(color: Colors.white, fontSize: deviceWidth * 0.04),
+              style:
+                  TextStyle(color: Colors.white, fontSize: deviceWidth * 0.04),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
@@ -355,23 +444,5 @@ class _SignInScreenState extends State<SignInScreen>
         ],
       ),
     );
-  }
-
-  void _handleSignIn() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          backgroundColor: Color(0xFF1E2A45),
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    setState(() => _isLoading = false);
-
-    // TODO: Connect to AuthBloc
   }
 }

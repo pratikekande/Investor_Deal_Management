@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:investor_deal_managemen/presentation/screens/investor/deal_listing_sceen.dart';
-import 'package:investor_deal_managemen/presentation/screens/investor/investor_bottom_nav.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:investor_deal_managemen/injection_container.dart' as di;
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_event.dart';
 import 'package:investor_deal_managemen/presentation/screens/splash/splash_screen.dart';
 
-void main() {
-  runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await di.init();
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: InvestorBottomNav()
+    return BlocProvider(
+      create: (_) => di.sl<AuthBloc>()..add(CheckSessionEvent()),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData.dark(),
+        home: const SplashScreen(),
+      ),
     );
   }
 }

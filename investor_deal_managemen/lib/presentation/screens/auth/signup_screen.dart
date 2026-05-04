@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_event.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_state.dart';
+import 'package:investor_deal_managemen/presentation/screens/auth/signin_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -15,7 +20,6 @@ class _SignUpScreenState extends State<SignUpScreen>
 
   bool _obscurePassword = true;
   bool _agreedToTerms = false;
-  bool _isLoading = false;
   String _selectedRole = 'Investor';
 
   late AnimationController _fadeController;
@@ -68,357 +72,462 @@ class _SignUpScreenState extends State<SignUpScreen>
     );
   }
 
+  void _handleSignUp(BuildContext context) {
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please fill in all fields',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: const Color(0xFF1E3A8A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please agree to Terms & Conditions',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: const Color(0xFF1E3A8A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
+    context.read<AuthBloc>().add(
+          SignUpEvent(
+            name: _nameController.text.trim(),
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            role: _selectedRole.toLowerCase(),
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double w = MediaQuery.of(context).size.width;
     final double h = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Container(
-        width: w,
-        height: h,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0D1B3E),
-              Color(0xFF0A0F2C),
-              Color(0xFF060B1E),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: w * 0.06),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: h * 0.03),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                '🎉 Account created successfully! Please sign in.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: const Color(0xFF22C55E),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+          context.read<AuthBloc>().add(SignOutEvent());
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const SignInScreen()),
+            (route) => false,
+          );
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: const Color(0xFFEF4444),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final bool isLoading = state is AuthLoading;
 
-                // Logo + App Name
-                _animated(
-                  0,
-                  Column(
-                    children: [
-                      Container(
-                        width: w * 0.16,
-                        height: w * 0.16,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(w * 0.036),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF3B82F6).withOpacity(0.35),
-                              blurRadius: 20,
-                              spreadRadius: 2,
+        return Scaffold(
+          // ← resizeToAvoidBottomInset true so keyboard pushes content up
+          resizeToAvoidBottomInset: true,
+          body: Container(
+            width: w,
+            height: h,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF0D1B3E),
+                  Color(0xFF0A0F2C),
+                  Color(0xFF060B1E),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                // ← scroll added
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: w * 0.06),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: h * 0.03),
+
+                    // Logo + App Name
+                    _animated(
+                      0,
+                      Column(
+                        children: [
+                          Container(
+                            width: w * 0.16,
+                            height: w * 0.16,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(w * 0.036),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      const Color(0xFF3B82F6).withOpacity(0.35),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            'DF',
+                            child: Center(
+                              child: Text(
+                                'DF',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: w * 0.058,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: h * 0.01),
+                          Text(
+                            'DEALFLOW',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: w * 0.058,
+                              fontSize: w * 0.045,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: h * 0.01),
-                      Text(
-                        'DEALFLOW',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: w * 0.045,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: h * 0.022),
-
-                // Header
-                _animated(
-                  1,
-                  Column(
-                    children: [
-                      Text(
-                        'Create Account',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: w * 0.062,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      SizedBox(height: h * 0.005),
-                      Text(
-                        'Join DealFlow and start your investment journey',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: const Color(0xFF94A3B8),
-                          fontSize: w * 0.033,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: h * 0.022),
-
-                // Role selection
-                _animated(
-                  2,
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'I AM A...',
-                        style: TextStyle(
-                          color: const Color(0xFF94A3B8),
-                          fontSize: w * 0.028,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      SizedBox(height: h * 0.01),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildRoleCard(
-                              role: 'Investor',
-                              icon: Icons.person_outline_rounded,
-                              w: w,
-                              h: h,
-                            ),
-                          ),
-                          SizedBox(width: w * 0.04),
-                          Expanded(
-                            child: _buildRoleCard(
-                              role: 'Corporate',
-                              icon: Icons.business_outlined,
-                              w: w,
-                              h: h,
+                              letterSpacing: 4,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                SizedBox(height: h * 0.022),
+                    SizedBox(height: h * 0.022),
 
-                // Form fields
-                _animated(
-                  3,
-                  Column(
-                    children: [
-                      _buildTextField(
-                        controller: _nameController,
-                        hint: 'Full Name',
-                        prefixIcon: Icons.person_outline_rounded,
-                        w: w,
-                        h: h,
-                        keyboardType: TextInputType.name,
-                      ),
-                      SizedBox(height: h * 0.014),
-                      _buildTextField(
-                        controller: _emailController,
-                        hint: 'Email Address',
-                        prefixIcon: Icons.mail_outline_rounded,
-                        w: w,
-                        h: h,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      SizedBox(height: h * 0.014),
-                      _buildTextField(
-                        controller: _passwordController,
-                        hint: 'Password',
-                        prefixIcon: Icons.lock_outline_rounded,
-                        w: w,
-                        h: h,
-                        isPassword: true,
-                        obscureText: _obscurePassword,
-                        onTogglePassword: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: h * 0.018),
-
-                // Terms checkbox
-                _animated(
-                  4,
-                  Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                    // Header
+                    _animated(
+                      1,
+                      Column(
                         children: [
-                          GestureDetector(
-                            onTap: () =>
-                                setState(() => _agreedToTerms = !_agreedToTerms),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: w * 0.048,
-                              height: w * 0.048,
-                              decoration: BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.circular(w * 0.011),
-                                border: Border.all(
-                                  color: _agreedToTerms
-                                      ? const Color(0xFF3B82F6)
-                                      : const Color(0xFF94A3B8),
-                                  width: 1.5,
-                                ),
-                                color: _agreedToTerms
-                                    ? const Color(0xFF3B82F6).withOpacity(0.2)
-                                    : Colors.transparent,
-                              ),
-                              child: _agreedToTerms
-                                  ? Icon(
-                                      Icons.check_rounded,
-                                      color: const Color(0xFF3B82F6),
-                                      size: w * 0.032,
-                                    )
-                                  : null,
+                          Text(
+                            'Create Account',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: w * 0.062,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
-                          SizedBox(width: w * 0.025),
-                          Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                style: TextStyle(
-                                  color: const Color(0xFF94A3B8),
-                                  fontSize: w * 0.031,
-                                  height: 1.4,
-                                ),
-                                children: [
-                                  const TextSpan(text: 'I agree to the '),
-                                  TextSpan(
-                                    text: 'Terms & Conditions',
-                                    style: TextStyle(
-                                      color: const Color(0xFF3B82F6),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: w * 0.031,
-                                    ),
-                                  ),
-                                  const TextSpan(text: ' and '),
-                                  TextSpan(
-                                    text: 'Privacy Policy',
-                                    style: TextStyle(
-                                      color: const Color(0xFF3B82F6),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: w * 0.031,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          SizedBox(height: h * 0.005),
+                          Text(
+                            'Join DealFlow and start your investment journey',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: const Color(0xFF94A3B8),
+                              fontSize: w * 0.033,
                             ),
                           ),
                         ],
                       ),
+                    ),
 
-                      SizedBox(height: h * 0.022),
+                    SizedBox(height: h * 0.022),
 
-                      // Create Account button
-                      GestureDetector(
-                        onTap: _isLoading ? null : _handleSignUp,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          width: w,
-                          height: h * 0.064,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(w * 0.04),
-                            gradient: LinearGradient(
-                              colors: _isLoading
-                                  ? [
-                                      const Color(0xFF1E3A8A).withOpacity(0.6),
-                                      const Color(0xFF3B82F6).withOpacity(0.6),
-                                    ]
-                                  : const [
-                                      Color(0xFF1E3A8A),
-                                      Color(0xFF3B82F6),
-                                    ],
+                    // Role selection
+                    _animated(
+                      2,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'I AM A...',
+                            style: TextStyle(
+                              color: const Color(0xFF94A3B8),
+                              fontSize: w * 0.028,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.5,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    const Color(0xFF3B82F6).withOpacity(0.3),
-                                blurRadius: 16,
-                                offset: const Offset(0, 5),
+                          ),
+                          SizedBox(height: h * 0.01),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildRoleCard(
+                                  role: 'Investor',
+                                  icon: Icons.person_outline_rounded,
+                                  w: w,
+                                  h: h,
+                                ),
+                              ),
+                              SizedBox(width: w * 0.04),
+                              Expanded(
+                                child: _buildRoleCard(
+                                  role: 'Corporate',
+                                  icon: Icons.business_outlined,
+                                  w: w,
+                                  h: h,
+                                ),
                               ),
                             ],
                           ),
-                          child: Center(
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(
-                                    'Create Account',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: w * 0.042,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                          ),
-                        ),
+                        ],
                       ),
+                    ),
 
-                      SizedBox(height: h * 0.02),
+                    SizedBox(height: h * 0.022),
 
-                      // Sign In row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    // Form fields
+                    _animated(
+                      3,
+                      Column(
                         children: [
-                          Text(
-                            'Already have an account? ',
-                            style: TextStyle(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: w * 0.034,
-                            ),
+                          _buildTextField(
+                            controller: _nameController,
+                            hint: 'Full Name',
+                            prefixIcon: Icons.person_outline_rounded,
+                            w: w,
+                            h: h,
+                            keyboardType: TextInputType.name,
                           ),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Text(
-                              'Sign In',
-                              style: TextStyle(
-                                color: const Color(0xFF3B82F6),
-                                fontSize: w * 0.034,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                          SizedBox(height: h * 0.014),
+                          _buildTextField(
+                            controller: _emailController,
+                            hint: 'Email Address',
+                            prefixIcon: Icons.mail_outline_rounded,
+                            w: w,
+                            h: h,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          SizedBox(height: h * 0.014),
+                          _buildTextField(
+                            controller: _passwordController,
+                            hint: 'Password',
+                            prefixIcon: Icons.lock_outline_rounded,
+                            w: w,
+                            h: h,
+                            isPassword: true,
+                            obscureText: _obscurePassword,
+                            onTogglePassword: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+
+                    SizedBox(height: h * 0.018),
+
+                    // Terms + button
+                    _animated(
+                      4,
+                      Column(
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: () => setState(
+                                    () => _agreedToTerms = !_agreedToTerms),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: w * 0.048,
+                                  height: w * 0.048,
+                                  decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.circular(w * 0.011),
+                                    border: Border.all(
+                                      color: _agreedToTerms
+                                          ? const Color(0xFF3B82F6)
+                                          : const Color(0xFF94A3B8),
+                                      width: 1.5,
+                                    ),
+                                    color: _agreedToTerms
+                                        ? const Color(0xFF3B82F6)
+                                            .withOpacity(0.2)
+                                        : Colors.transparent,
+                                  ),
+                                  child: _agreedToTerms
+                                      ? Icon(
+                                          Icons.check_rounded,
+                                          color: const Color(0xFF3B82F6),
+                                          size: w * 0.032,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              SizedBox(width: w * 0.025),
+                              Expanded(
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: TextStyle(
+                                      color: const Color(0xFF94A3B8),
+                                      fontSize: w * 0.031,
+                                      height: 1.4,
+                                    ),
+                                    children: [
+                                      const TextSpan(text: 'I agree to the '),
+                                      TextSpan(
+                                        text: 'Terms & Conditions',
+                                        style: TextStyle(
+                                          color: const Color(0xFF3B82F6),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: w * 0.031,
+                                        ),
+                                      ),
+                                      const TextSpan(text: ' and '),
+                                      TextSpan(
+                                        text: 'Privacy Policy',
+                                        style: TextStyle(
+                                          color: const Color(0xFF3B82F6),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: w * 0.031,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: h * 0.022),
+
+                          // Create Account button
+                          GestureDetector(
+                            onTap:
+                                isLoading ? null : () => _handleSignUp(context),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              width: w,
+                              height: h * 0.064,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(w * 0.04),
+                                gradient: LinearGradient(
+                                  colors: isLoading
+                                      ? [
+                                          const Color(0xFF1E3A8A)
+                                              .withOpacity(0.6),
+                                          const Color(0xFF3B82F6)
+                                              .withOpacity(0.6),
+                                        ]
+                                      : const [
+                                          Color(0xFF1E3A8A),
+                                          Color(0xFF3B82F6),
+                                        ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF3B82F6)
+                                        .withOpacity(0.3),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Create Account',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: w * 0.042,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: h * 0.02),
+
+                          // Sign In row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Already have an account? ',
+                                style: TextStyle(
+                                  color: const Color(0xFF94A3B8),
+                                  fontSize: w * 0.034,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    color: const Color(0xFF3B82F6),
+                                    fontSize: w * 0.034,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: h * 0.04),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -480,7 +589,8 @@ class _SignUpScreenState extends State<SignUpScreen>
                   Text(
                     role,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF94A3B8),
                       fontSize: w * 0.034,
                       fontWeight:
                           isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -553,31 +663,5 @@ class _SignUpScreenState extends State<SignUpScreen>
         ],
       ),
     );
-  }
-
-  void _handleSignUp() async {
-    if (_nameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Please fill in all fields'),
-        backgroundColor: Color(0xFF1E2A45),
-      ));
-      return;
-    }
-
-    if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Please agree to Terms & Conditions'),
-        backgroundColor: Color(0xFF1E2A45),
-      ));
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    setState(() => _isLoading = false);
-
-    // TODO: Connect to AuthBloc
   }
 }

@@ -4,29 +4,29 @@ import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_event.dart';
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_state.dart';
 import 'package:investor_deal_managemen/presentation/screens/auth/signin_screen.dart';
-import 'package:investor_deal_managemen/presentation/screens/investor/deal_listing_sceen.dart';
-import 'package:investor_deal_managemen/presentation/screens/investor/my_intrest_screen.dart';
+import 'package:investor_deal_managemen/presentation/screens/corporate/corporate_dashboard_screen.dart';
+import 'package:investor_deal_managemen/presentation/screens/corporate/deal_management_screen.dart';
 
-class InvestorBottomNav extends StatefulWidget {
-  const InvestorBottomNav({super.key});
+class CorporateBottomNav extends StatefulWidget {
+  const CorporateBottomNav({super.key});
 
   @override
-  State<InvestorBottomNav> createState() => _InvestorBottomNavState();
+  State<CorporateBottomNav> createState() => _CorporateBottomNavState();
 }
 
-class _InvestorBottomNavState extends State<InvestorBottomNav> {
+class _CorporateBottomNavState extends State<CorporateBottomNav> {
   int _currentIndex = 0;
 
   Widget get _currentPage {
     switch (_currentIndex) {
       case 0:
-        return const DealListingScreen();
+        return const DealDashboardScreen();
       case 1:
-        return const MyInterestsScreen();
+        return const MyDealsScreen();
       case 2:
-        return const _InvestorProfileScreen();
+        return const _CorporateProfileScreen();
       default:
-        return const DealListingScreen();
+        return const DealDashboardScreen();
     }
   }
 
@@ -54,14 +54,14 @@ class _InvestorBottomNavState extends State<InvestorBottomNav> {
         onTap: (value) => setState(() => _currentIndex = value),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.handshake_outlined),
-            activeIcon: Icon(Icons.handshake_rounded),
-            label: 'Deals',
+            icon: Icon(Icons.grid_view_outlined),
+            activeIcon: Icon(Icons.grid_view_rounded),
+            label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_border_rounded),
-            activeIcon: Icon(Icons.bookmark_rounded),
-            label: 'Interests',
+            icon: Icon(Icons.business_center_outlined),
+            activeIcon: Icon(Icons.business_center_rounded),
+            label: 'My Deals',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded),
@@ -74,18 +74,18 @@ class _InvestorBottomNavState extends State<InvestorBottomNav> {
   }
 }
 
-class _InvestorProfileScreen extends StatelessWidget {
-  const _InvestorProfileScreen();
+class _CorporateProfileScreen extends StatelessWidget {
+  const _CorporateProfileScreen();
 
   @override
   Widget build(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
     final user = authState is AuthAuthenticated ? authState.user : null;
 
-    final String name = user?.name ?? 'Investor';
+    final String name = user?.name ?? 'Corporate';
     final String email = user?.email ?? '';
-    final String role = user?.role ?? 'investor';
-    final String initial = name.isNotEmpty ? name[0].toUpperCase() : 'I';
+    final String role = user?.role ?? 'corporate';
+    final String initial = name.isNotEmpty ? name[0].toUpperCase() : 'C';
 
     final double w = MediaQuery.of(context).size.width;
     final double h = MediaQuery.of(context).size.height;
@@ -194,9 +194,7 @@ class _InvestorProfileScreen extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  role.isNotEmpty
-                      ? role[0].toUpperCase() + role.substring(1)
-                      : 'Investor',
+                  'Corporate',
                   style: TextStyle(
                     color: const Color(0xFF3B82F6),
                     fontSize: w * 0.034,
@@ -223,8 +221,8 @@ class _InvestorProfileScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _buildInfoRow(
-                      icon: Icons.person_outline_rounded,
-                      label: 'Full Name',
+                      icon: Icons.business_outlined,
+                      label: 'Company Name',
                       value: name,
                       w: w,
                     ),
@@ -249,7 +247,7 @@ class _InvestorProfileScreen extends StatelessWidget {
                       label: 'Role',
                       value: role.isNotEmpty
                           ? role[0].toUpperCase() + role.substring(1)
-                          : 'Investor',
+                          : 'Corporate',
                       w: w,
                     ),
                   ],
