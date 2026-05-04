@@ -52,7 +52,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
   Color _getIndustryColor(String industry) {
     switch (industry.toLowerCase()) {
       case 'tech':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFF6366F1);
       case 'healthcare':
         return const Color(0xFF06B6D4);
       case 'finance':
@@ -62,7 +62,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
       case 'real estate':
         return const Color(0xFF22C55E);
       default:
-        return const Color(0xFF3B82F6);
+        return const Color(0xFF6366F1);
     }
   }
 
@@ -101,17 +101,12 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: deviceHeight * 0.015),
-
                         _buildCompanyHeaderCard(deviceWidth, deviceHeight),
-
                         SizedBox(height: deviceHeight * 0.025),
-
                         _buildSectionTitle('Financial Highlights', deviceWidth),
                         SizedBox(height: deviceHeight * 0.012),
                         _buildFinancialGrid(deviceWidth, deviceHeight),
-
                         SizedBox(height: deviceHeight * 0.025),
-
                         _buildSectionTitle('About the Company', deviceWidth),
                         SizedBox(height: deviceHeight * 0.012),
                         Text(
@@ -125,27 +120,19 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                             height: 1.6,
                           ),
                         ),
-
                         SizedBox(height: deviceHeight * 0.025),
-
                         _buildROIProjectionCard(deviceWidth, deviceHeight),
-
                         SizedBox(height: deviceHeight * 0.02),
-
                         _buildRiskAnalysisCard(deviceWidth, deviceHeight),
-
                         SizedBox(height: deviceHeight * 0.025),
-
                         _buildSectionTitle('Visual Assets', deviceWidth),
                         SizedBox(height: deviceHeight * 0.012),
                         _buildVisualAssets(deviceWidth, deviceHeight),
-
                         SizedBox(height: deviceHeight * 0.05),
                       ],
                     ),
                   ),
                 ),
-
                 _buildBottomButton(deviceWidth, deviceHeight),
               ],
             ),
@@ -155,38 +142,60 @@ class _DealDetailScreenState extends State<DealDetailScreen>
     );
   }
 
+  // ── AppBar (matches My Interests style) ─────────────────────────────────────
   Widget _buildAppBar(double deviceWidth, double deviceHeight) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: deviceWidth * 0.04,
-        vertical: deviceHeight * 0.015,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.arrow_back_rounded,
-                  color: Colors.white,
-                  size: deviceWidth * 0.06,
-                ),
-                SizedBox(width: deviceWidth * 0.02),
-                Text(
-                  'Deal Detail',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: deviceWidth * 0.045,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+    final bool isOpen = widget.deal['status'] == 'OPEN';
+
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: deviceWidth * 0.04,
+            vertical: deviceHeight * 0.018,
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Back button + title
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: deviceWidth * 0.09,
+                      height: deviceWidth * 0.09,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E2A45),
+                        borderRadius:
+                            BorderRadius.circular(deviceWidth * 0.025),
+                        border: Border.all(
+                          color: const Color(0xFF2A3A55),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                        size: deviceWidth * 0.05,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: deviceWidth * 0.03),
+                  Text(
+                    'Deal Detail',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: deviceWidth * 0.055,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Divider(color: Color(0xFF1E2A45), thickness: 1, height: 1),
+      ],
     );
   }
 
@@ -302,9 +311,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
               ),
             ],
           ),
-
           SizedBox(height: deviceHeight * 0.015),
-
           Text(
             widget.deal['company'],
             style: TextStyle(
@@ -313,9 +320,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
               fontWeight: FontWeight.w800,
             ),
           ),
-
           SizedBox(height: deviceHeight * 0.006),
-
           Text(
             'A leading ${widget.deal['industry'].toString().toLowerCase()} company driving innovation and growth.',
             style: TextStyle(
@@ -461,9 +466,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
               ),
             ],
           ),
-
           SizedBox(height: deviceHeight * 0.025),
-
           SizedBox(
             height: deviceHeight * 0.2,
             child: LineChart(
@@ -510,7 +513,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    color: const Color(0xFF3B82F6),
+                    color: const Color(0xFF6366F1),
                     barWidth: 2.5,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
@@ -520,8 +523,8 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFF3B82F6).withOpacity(0.3),
-                          const Color(0xFF3B82F6).withOpacity(0.0),
+                          const Color(0xFF6366F1).withOpacity(0.3),
+                          const Color(0xFF6366F1).withOpacity(0.0),
                         ],
                       ),
                     ),
@@ -611,7 +614,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
             child: Center(
               child: Icon(
                 Icons.dns_outlined,
-                color: const Color(0xFF3B82F6),
+                color: const Color(0xFF6366F1),
                 size: deviceWidth * 0.1,
               ),
             ),
@@ -678,13 +681,13 @@ class _DealDetailScreenState extends State<DealDetailScreen>
             gradient: LinearGradient(
               colors: _isInterested
                   ? [const Color(0xFF22C55E), const Color(0xFF16A34A)]
-                  : [const Color(0xFF1E3A8A), const Color(0xFF3B82F6)],
+                  : [const Color(0xFF4F46E5), const Color(0xFF6366F1)],
             ),
             boxShadow: [
               BoxShadow(
                 color: (_isInterested
                         ? const Color(0xFF22C55E)
-                        : const Color(0xFF3B82F6))
+                        : const Color(0xFF6366F1))
                     .withOpacity(0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 5),

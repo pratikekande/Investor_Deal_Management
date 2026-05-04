@@ -15,18 +15,9 @@ class DealDashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Fixed header (never scrolls) ──
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: w * 0.05),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: h * 0.025),
-                  _DashboardHeader(w: w),
-                  SizedBox(height: h * 0.025),
-                ],
-              ),
-            ),
+            // ── AppBar (consistent style) ──
+            _DashboardAppBar(w: w, h: h),
+
             // ── Scrollable body ──
             Expanded(
               child: SingleChildScrollView(
@@ -34,6 +25,7 @@ class DealDashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: h * 0.02),
                     _StatsRow(w: w),
                     SizedBox(height: h * 0.02),
                     _InvestorCard(w: w, h: h),
@@ -76,7 +68,7 @@ class DealDashboardScreen extends StatelessWidget {
                       riskColor: const Color(0xFFF59E0B),
                       primaryBtnLabel: 'Archive',
                       secondaryBtnLabel: 'View Summary',
-                      secondaryBtnColor: const Color(0xFF3B82F6),
+                      secondaryBtnColor: const Color(0xFF6366F1),
                       isClosed: true,
                     ),
                     SizedBox(height: h * 0.018),
@@ -93,39 +85,60 @@ class DealDashboardScreen extends StatelessWidget {
   }
 }
 
-// ─── Header ──────────────────────────────────────────────────────────────────
+// ─── AppBar ───────────────────────────────────────────────────────────────────
 
-class _DashboardHeader extends StatelessWidget {
+class _DashboardAppBar extends StatelessWidget {
   final double w;
-  const _DashboardHeader({required this.w});
+  final double h;
+  const _DashboardAppBar({required this.w, required this.h});
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Hello, TechCorp ',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: w * 0.065,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: w * 0.05,
+            vertical: h * 0.018,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Hello, TechCorp',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w * 0.055,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(width: w * 0.015),
+                      Text(
+                        '👋',
+                        style: TextStyle(fontSize: w * 0.052),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: h * 0.004),
+                  Text(
+                    'Manage your deals',
+                    style: TextStyle(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: w * 0.032,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Text('👋', style: TextStyle(fontSize: w * 0.06)),
-          ],
-        ),
-        SizedBox(height: w * 0.008),
-        Text(
-          'Manage your deals',
-          style: TextStyle(
-            color: const Color(0xFF6B7280),
-            fontSize: w * 0.035,
+            ],
           ),
         ),
+        const Divider(color: Color(0xFF1E2A3F), thickness: 1, height: 1),
       ],
     );
   }
@@ -145,7 +158,11 @@ class _StatsRow extends StatelessWidget {
         SizedBox(width: w * 0.03),
         _StatTile(w: w, label: 'OPEN', value: '4', valueColor: Colors.white),
         SizedBox(width: w * 0.03),
-        _StatTile(w: w, label: 'CLOSED', value: '2', valueColor: const Color(0xFFEF4444)),
+        _StatTile(
+            w: w,
+            label: 'CLOSED',
+            value: '2',
+            valueColor: const Color(0xFFEF4444)),
       ],
     );
   }
@@ -168,7 +185,8 @@ class _StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: w * 0.04, horizontal: w * 0.03),
+        padding: EdgeInsets.symmetric(
+            vertical: w * 0.04, horizontal: w * 0.03),
         decoration: BoxDecoration(
           color: const Color(0xFF111827),
           borderRadius: BorderRadius.circular(w * 0.04),
@@ -240,7 +258,7 @@ class _InvestorCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.bar_chart_rounded,
-                  color: const Color(0xFF3B82F6),
+                  color: const Color(0xFF6366F1),
                   size: w * 0.05,
                 ),
               ),
@@ -320,10 +338,13 @@ class _MiniBarChart extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isLast
-                        ? [const Color(0xFF3B82F6), const Color(0xFF60A5FA)]
+                        ? [
+                            const Color(0xFF4F46E5),
+                            const Color(0xFF818CF8),
+                          ]
                         : [
-                            const Color(0xFF1E3A5F),
-                            const Color(0xFF2563EB).withOpacity(0.6),
+                            const Color(0xFF1E1B4B),
+                            const Color(0xFF4338CA).withOpacity(0.6),
                           ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
@@ -353,21 +374,38 @@ class _PostDealButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const PostNewDealScreen()),
+        PageRouteBuilder(
+          pageBuilder: (_, animation, __) => const PostNewDealScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.04),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
       ),
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: w * 0.043),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF1D4ED8), Color(0xFF3B82F6)],
+            colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(w * 0.04),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3B82F6).withOpacity(0.35),
+              color: const Color(0xFF6366F1).withOpacity(0.35),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -402,18 +440,13 @@ class _RecentDealsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Your Recent Deals',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: w * 0.05,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
+    return Text(
+      'Your Recent Deals',
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: w * 0.05,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 }
@@ -490,8 +523,12 @@ class _DealCard extends StatelessWidget {
               SizedBox(width: w * 0.02),
               _Chip(
                 label: status,
-                bgColor: isClosed ? const Color(0xFF374151) : const Color(0xFF1D4ED8),
-                textColor: isClosed ? const Color(0xFF9CA3AF) : Colors.white,
+                bgColor: isClosed
+                    ? const Color(0xFF374151)
+                    : const Color(0xFF4F46E5).withOpacity(0.2),
+                textColor: isClosed
+                    ? const Color(0xFF9CA3AF)
+                    : const Color(0xFF818CF8),
                 w: w,
               ),
             ],
@@ -525,7 +562,9 @@ class _DealCard extends StatelessWidget {
               minHeight: w * 0.018,
               backgroundColor: const Color(0xFF1E2A3F),
               valueColor: AlwaysStoppedAnimation<Color>(
-                isClosed ? const Color(0xFF6B7280) : const Color(0xFF3B82F6),
+                isClosed
+                    ? const Color(0xFF6B7280)
+                    : const Color(0xFF6366F1),
               ),
             ),
           ),
@@ -599,7 +638,8 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: w * 0.03, vertical: w * 0.012),
+      padding:
+          EdgeInsets.symmetric(horizontal: w * 0.03, vertical: w * 0.012),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(w * 0.02),
@@ -641,7 +681,9 @@ class _MetricBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          topLabelSuffix != null ? '$topLabel    $topLabelSuffix' : topLabel,
+          topLabelSuffix != null
+              ? '$topLabel    $topLabelSuffix'
+              : topLabel,
           style: TextStyle(
             color: const Color(0xFF6B7280),
             fontSize: w * 0.028,
@@ -757,7 +799,7 @@ class _MarketInsightsCard extends StatelessWidget {
                 Text(
                   'MARKET INSIGHTS',
                   style: TextStyle(
-                    color: const Color(0xFF3B82F6),
+                    color: const Color(0xFF6366F1),
                     fontSize: w * 0.028,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
@@ -790,9 +832,9 @@ class _WavePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final colors = [
-      const Color(0xFF3B82F6).withOpacity(0.5),
-      const Color(0xFF06B6D4).withOpacity(0.35),
-      const Color(0xFF3B82F6).withOpacity(0.2),
+      const Color(0xFF6366F1).withOpacity(0.5),
+      const Color(0xFF818CF8).withOpacity(0.35),
+      const Color(0xFF6366F1).withOpacity(0.2),
     ];
     final offsets = [0.3, 0.55, 0.75];
 

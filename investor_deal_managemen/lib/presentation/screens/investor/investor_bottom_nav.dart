@@ -10,30 +10,72 @@ class InvestorBottomNav extends StatefulWidget {
   State<InvestorBottomNav> createState() => _InvestorBottomNavState();
 }
 
-class _InvestorBottomNavState extends State<InvestorBottomNav> {
+class _InvestorBottomNavState extends State<InvestorBottomNav>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  int _previousIndex = 0;
 
-  Widget get _currentPage {
-    switch (_currentIndex) {
-      case 0:
-        return const DealListingScreen();
-      case 1:
-        return const MyInterestsScreen();
-      case 2:
-        return const InvestorProfileScreen();
-      default:
-        return const DealListingScreen();
-    }
+  late AnimationController _animController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  final List<Widget> _pages = const [
+    DealListingScreen(),
+    MyInterestsScreen(),
+    InvestorProfileScreen(),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+    );
+
+    _animController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _onTabTapped(int index) {
+    if (index == _currentIndex) return;
+    setState(() {
+      _previousIndex = _currentIndex;
+      _currentIndex = index;
+    });
+    _animController.forward(from: 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _currentPage,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: _pages[_currentIndex],
+        ),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3B82F6),
+        selectedItemColor: const Color(0xFF6366F1),
         unselectedItemColor: const Color(0xFF94A3B8),
         backgroundColor: const Color(0xFF1E2A45),
         elevation: 8,
@@ -47,7 +89,7 @@ class _InvestorBottomNavState extends State<InvestorBottomNav> {
           fontSize: 11,
           letterSpacing: 0.5,
         ),
-        onTap: (value) => setState(() => _currentIndex = value),
+        onTap: _onTabTapped,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.handshake_outlined),

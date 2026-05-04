@@ -59,8 +59,8 @@ class _MyDealsScreenState extends State<MyDealsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _MyDealsAppBar(w: w),
-            Container(height: 1, color: const Color(0xFF1E2A3F)),
+            _MyDealsAppBar(w: w, h: h, totalDeals: _allDeals.length),
+            const Divider(color: Color(0xFF1E2A3F), thickness: 1, height: 1),
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
@@ -125,22 +125,30 @@ class _DealData {
 
 class _MyDealsAppBar extends StatelessWidget {
   final double w;
-  const _MyDealsAppBar({required this.w});
+  final double h;
+  final int totalDeals;
+  const _MyDealsAppBar(
+      {required this.w, required this.h, required this.totalDeals});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: w * 0.05,
-        vertical: w * 0.04,
+        vertical: h * 0.018,
       ),
-      child: Text(
-        'My Deals',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: w * 0.058,
-          fontWeight: FontWeight.w700,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'My Deals',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: w * 0.055,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -205,7 +213,7 @@ class _PortfolioBanner extends StatelessWidget {
                 Text(
                   '24 Interests',
                   style: TextStyle(
-                    color: const Color(0xFF3B82F6),
+                    color: const Color(0xFF6366F1),
                     fontSize: w * 0.042,
                     fontWeight: FontWeight.w700,
                   ),
@@ -295,10 +303,14 @@ class _FilterPill extends StatelessWidget {
           vertical: w * 0.03,
         ),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF3B82F6) : const Color(0xFF111827),
+          color: isActive
+              ? const Color(0xFF6366F1)
+              : const Color(0xFF111827),
           borderRadius: BorderRadius.circular(w * 0.08),
           border: Border.all(
-            color: isActive ? const Color(0xFF3B82F6) : const Color(0xFF374151),
+            color: isActive
+                ? const Color(0xFF6366F1)
+                : const Color(0xFF374151),
             width: 1.5,
           ),
         ),
@@ -350,9 +362,13 @@ class _DealCard extends StatelessWidget {
           SizedBox(height: w * 0.03),
           Row(
             children: [
-              _StatusChip(label: deal.status, color: statusColor, w: w),
+              _StatusChip(
+                  label: deal.status, color: statusColor, w: w),
               SizedBox(width: w * 0.02),
-              _StatusChip(label: deal.tag, color: const Color(0xFF3B82F6), w: w),
+              _StatusChip(
+                  label: deal.tag,
+                  color: const Color(0xFF6366F1),
+                  w: w),
             ],
           ),
           SizedBox(height: w * 0.05),
@@ -390,12 +406,12 @@ class _DealCard extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.people_rounded,
-                  color: const Color(0xFF3B82F6), size: w * 0.055),
+                  color: const Color(0xFF6366F1), size: w * 0.055),
               SizedBox(width: w * 0.02),
               Text(
                 '${deal.investors} Investors Interested',
                 style: TextStyle(
-                  color: const Color(0xFF3B82F6),
+                  color: const Color(0xFF6366F1),
                   fontSize: w * 0.04,
                   fontWeight: FontWeight.w600,
                 ),
@@ -408,8 +424,8 @@ class _DealCard extends StatelessWidget {
               Expanded(
                 child: _ActionBtn(
                   label: 'VIEW\nINTERESTS',
-                  borderColor: const Color(0xFF3B82F6),
-                  textColor: const Color(0xFF3B82F6),
+                  borderColor: const Color(0xFF6366F1),
+                  textColor: const Color(0xFF6366F1),
                   w: w,
                   onTap: () {},
                 ),
@@ -447,12 +463,14 @@ class _StatusChip extends StatelessWidget {
   final Color color;
   final double w;
 
-  const _StatusChip({required this.label, required this.color, required this.w});
+  const _StatusChip(
+      {required this.label, required this.color, required this.w});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: w * 0.03, vertical: w * 0.012),
+      padding: EdgeInsets.symmetric(
+          horizontal: w * 0.03, vertical: w * 0.012),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(w * 0.015),

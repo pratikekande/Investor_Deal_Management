@@ -22,7 +22,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
       'roi': '18%',
       'risk': 'Medium',
       'icon': Icons.hub_outlined,
-      'iconColor': Color(0xFF3B82F6),
+      'iconColor': Color(0xFF6366F1),
     },
     {
       'company': 'FinStream Pro',
@@ -81,7 +81,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
   Color _getStatusColor(String status) {
     switch (status.toUpperCase()) {
       case 'OPEN':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFF6366F1);
       case 'CLOSING':
         return const Color(0xFFF59E0B);
       case 'CLOSED':
@@ -182,13 +182,11 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
             child: Column(
               children: [
                 _buildAppBar(deviceWidth, deviceHeight),
-
-                Divider(
-                  color: const Color(0xFF1E2A45),
+                const Divider(
+                  color: Color(0xFF1E2A45),
                   thickness: 1,
                   height: 1,
                 ),
-
                 Expanded(
                   child: _interestedDeals.isEmpty
                       ? _buildEmptyState(deviceWidth, deviceHeight)
@@ -199,11 +197,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                           child: Column(
                             children: [
                               SizedBox(height: deviceHeight * 0.025),
-
                               _buildSummaryCard(deviceWidth, deviceHeight),
-
                               SizedBox(height: deviceHeight * 0.025),
-
                               ...List.generate(
                                 _interestedDeals.length,
                                 (index) => Padding(
@@ -218,7 +213,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                                   ),
                                 ),
                               ),
-
                               SizedBox(height: deviceHeight * 0.02),
                             ],
                           ),
@@ -241,26 +235,37 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: Colors.white,
-                  size: deviceWidth * 0.06,
-                ),
+          Text(
+            'My Interests',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: deviceWidth * 0.055,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          // Saved count chip
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: deviceWidth * 0.035,
+              vertical: deviceHeight * 0.007,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(deviceWidth * 0.02),
+              border: Border.all(
+                color: const Color(0xFF6366F1).withOpacity(0.4),
+                width: 1,
               ),
-              SizedBox(width: deviceWidth * 0.03),
-              Text(
-                'My Interests',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: deviceWidth * 0.055,
-                  fontWeight: FontWeight.w700,
-                ),
+            ),
+            child: Text(
+              '${_interestedDeals.length} Saved',
+              style: TextStyle(
+                color: const Color(0xFF818CF8),
+                fontSize: deviceWidth * 0.03,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -321,7 +326,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
               Text(
                 '₹1.5Cr',
                 style: TextStyle(
-                  color: const Color(0xFF3B82F6),
+                  color: const Color(0xFF6366F1),  // updated from #3B82F6
                   fontSize: deviceWidth * 0.048,
                   fontWeight: FontWeight.w700,
                 ),
@@ -373,9 +378,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                     size: deviceWidth * 0.07,
                   ),
                 ),
-
                 SizedBox(width: deviceWidth * 0.04),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,7 +451,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                   child: _buildStatColumn(
                     label: 'EXP. ROI',
                     value: deal['roi'],
-                    valueColor: const Color(0xFF3B82F6),
+                    valueColor: const Color(0xFF22C55E), // green for ROI
                     deviceWidth: deviceWidth,
                     deviceHeight: deviceHeight,
                   ),
@@ -476,11 +479,9 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                    builder: (context) {
-                      return DealDetailScreen(deal: deal,);
-                    },
-                  ),
-                );
+                          builder: (context) => DealDetailScreen(deal: deal),
+                        ),
+                      );
                     },
                     child: Container(
                       height: deviceHeight * 0.055,
@@ -488,7 +489,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                         borderRadius:
                             BorderRadius.circular(deviceWidth * 0.03),
                         border: Border.all(
-                          color: const Color(0xFF3B82F6),
+                          color: const Color(0xFF6366F1), // updated
                           width: 1.5,
                         ),
                       ),
@@ -496,7 +497,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                         child: Text(
                           'VIEW DETAILS',
                           style: TextStyle(
-                            color: const Color(0xFF3B82F6),
+                            color: const Color(0xFF6366F1), // updated
                             fontSize: deviceWidth * 0.033,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1,
@@ -506,9 +507,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                     ),
                   ),
                 ),
-
                 SizedBox(width: deviceWidth * 0.03),
-
                 GestureDetector(
                   onTap: () => _removeInterest(index),
                   child: Container(
@@ -612,7 +611,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(deviceWidth * 0.04),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)], // updated
                 ),
               ),
               child: Text(

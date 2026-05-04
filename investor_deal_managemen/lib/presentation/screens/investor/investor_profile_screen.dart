@@ -32,212 +32,237 @@ class InvestorProfileScreen extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: w * 0.06),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: h * 0.05),
+        child: Column(
+          children: [
+            _buildAppBar(w, h, role),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: w * 0.06),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: h * 0.04),
 
-              // Page title
+                    // Avatar
+                    Container(
+                      width: w * 0.28,
+                      height: w * 0.28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF6366F1).withOpacity(0.4),
+                            blurRadius: 25,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: w * 0.12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: h * 0.025),
+
+                    // Name
+                    Text(
+                      name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: w * 0.055,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+
+                    SizedBox(height: h * 0.008),
+
+                    // Email
+                    Text(
+                      email,
+                      style: TextStyle(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: w * 0.038,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+
+                    SizedBox(height: h * 0.02),
+
+                    // Role chip
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: w * 0.05,
+                        vertical: h * 0.008,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(w * 0.05),
+                        border: Border.all(
+                          color: const Color(0xFF6366F1).withOpacity(0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        role.isNotEmpty
+                            ? role[0].toUpperCase() + role.substring(1)
+                            : 'Investor',
+                        style: TextStyle(
+                          color: const Color(0xFF818CF8),
+                          fontSize: w * 0.034,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: h * 0.05),
+
+                    // Profile info card
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(w * 0.05),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E2A45),
+                        borderRadius: BorderRadius.circular(w * 0.04),
+                        border: Border.all(
+                          color: const Color(0xFF2A3A55),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildInfoRow(
+                            icon: Icons.person_outline_rounded,
+                            label: 'Full Name',
+                            value: name,
+                            w: w,
+                          ),
+                          Divider(
+                            color: const Color(0xFF2A3A55),
+                            height: h * 0.03,
+                            thickness: 1,
+                          ),
+                          _buildInfoRow(
+                            icon: Icons.mail_outline_rounded,
+                            label: 'Email',
+                            value: email,
+                            w: w,
+                          ),
+                          Divider(
+                            color: const Color(0xFF2A3A55),
+                            height: h * 0.03,
+                            thickness: 1,
+                          ),
+                          _buildInfoRow(
+                            icon: Icons.badge_outlined,
+                            label: 'Role',
+                            value: role.isNotEmpty
+                                ? role[0].toUpperCase() + role.substring(1)
+                                : 'Investor',
+                            w: w,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: h * 0.05),
+
+                    // Logout button
+                    GestureDetector(
+                      onTap: () {
+                        context.read<AuthBloc>().add(SignOutEvent());
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (_) => const SignInScreen()),
+                          (route) => false,
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: h * 0.065,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(w * 0.04),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  const Color(0xFF6366F1).withOpacity(0.35),
+                              blurRadius: 16,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.logout_rounded,
+                                color: Colors.white, size: 20),
+                            SizedBox(width: w * 0.025),
+                            Text(
+                              'Logout',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: w * 0.042,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: h * 0.04),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── AppBar (matches My Interests style) ─────────────────────────────────────
+  Widget _buildAppBar(double w, double h, String role) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: w * 0.05,
+            vertical: h * 0.018,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text(
                 'Profile',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: w * 0.06,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                ),
-              ),
-
-              SizedBox(height: h * 0.04),
-
-              // Avatar
-              Container(
-                width: w * 0.28,
-                height: w * 0.28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF3B82F6).withOpacity(0.4),
-                      blurRadius: 25,
-                      spreadRadius: 4,
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    initial,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: w * 0.12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: h * 0.025),
-
-              // Name
-              Text(
-                name,
-                style: TextStyle(
-                  color: Colors.white,
                   fontSize: w * 0.055,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
                 ),
               ),
-
-              SizedBox(height: h * 0.008),
-
-              // Email
-              Text(
-                email,
-                style: TextStyle(
-                  color: const Color(0xFF94A3B8),
-                  fontSize: w * 0.038,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-
-              SizedBox(height: h * 0.02),
-
-              // Role chip
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: w * 0.05,
-                  vertical: h * 0.008,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(w * 0.05),
-                  border: Border.all(
-                    color: const Color(0xFF3B82F6).withOpacity(0.5),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  role.isNotEmpty
-                      ? role[0].toUpperCase() + role.substring(1)
-                      : 'Investor',
-                  style: TextStyle(
-                    color: const Color(0xFF3B82F6),
-                    fontSize: w * 0.034,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: h * 0.06),
-
-              // Profile info card
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(w * 0.05),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E2A45),
-                  borderRadius: BorderRadius.circular(w * 0.04),
-                  border: Border.all(
-                    color: const Color(0xFF2A3A55),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    _buildInfoRow(
-                      icon: Icons.person_outline_rounded,
-                      label: 'Full Name',
-                      value: name,
-                      w: w,
-                    ),
-                    Divider(
-                      color: const Color(0xFF2A3A55),
-                      height: h * 0.03,
-                      thickness: 1,
-                    ),
-                    _buildInfoRow(
-                      icon: Icons.mail_outline_rounded,
-                      label: 'Email',
-                      value: email,
-                      w: w,
-                    ),
-                    Divider(
-                      color: const Color(0xFF2A3A55),
-                      height: h * 0.03,
-                      thickness: 1,
-                    ),
-                    _buildInfoRow(
-                      icon: Icons.badge_outlined,
-                      label: 'Role',
-                      value: role.isNotEmpty
-                          ? role[0].toUpperCase() + role.substring(1)
-                          : 'Investor',
-                      w: w,
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: h * 0.05),
-
-              // Logout button
-              GestureDetector(
-                onTap: () {
-                  context.read<AuthBloc>().add(SignOutEvent());
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const SignInScreen()),
-                    (route) => false,
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: h * 0.065,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(w * 0.04),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3B82F6).withOpacity(0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
-                      SizedBox(width: w * 0.025),
-                      Text(
-                        'Logout',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: w * 0.042,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: h * 0.04),
             ],
           ),
         ),
-      ),
+        const Divider(color: Color(0xFF1E2A45), thickness: 1, height: 1),
+      ],
     );
   }
 
@@ -253,10 +278,11 @@ class InvestorProfileScreen extends StatelessWidget {
           width: w * 0.1,
           height: w * 0.1,
           decoration: BoxDecoration(
-            color: const Color(0xFF3B82F6).withOpacity(0.1),
+            color: const Color(0xFF6366F1).withOpacity(0.1),
             borderRadius: BorderRadius.circular(w * 0.025),
           ),
-          child: Icon(icon, color: const Color(0xFF3B82F6), size: w * 0.048),
+          child:
+              Icon(icon, color: const Color(0xFF6366F1), size: w * 0.048),
         ),
         SizedBox(width: w * 0.04),
         Expanded(

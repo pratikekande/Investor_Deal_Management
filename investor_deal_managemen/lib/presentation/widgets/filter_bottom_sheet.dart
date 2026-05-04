@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 
-// ════════════════════════════════════════════════════════════════════════════
-//  FilterBottomSheet
-//
-//  Show it from anywhere:
-//    showModalBottomSheet(
-//      context: context,
-//      isScrollControlled: true,
-//      backgroundColor: Colors.transparent,
-//      builder: (_) => const FilterBottomSheet(),
-//    );
-// ════════════════════════════════════════════════════════════════════════════
-
 class FilterBottomSheet extends StatefulWidget {
-  const FilterBottomSheet({super.key});
+  final String? initialIndustry;
+  final String? initialRisk;
+  final String? initialStatus;
+  final double initialRoiMin;
+  final double initialRoiMax;
+
+  const FilterBottomSheet({
+    super.key,
+    this.initialIndustry,
+    this.initialRisk,
+    this.initialStatus,
+    this.initialRoiMin = 0,
+    this.initialRoiMax = 30,
+  });
 
   @override
   State<FilterBottomSheet> createState() => _FilterBottomSheetState();
@@ -21,22 +22,33 @@ class FilterBottomSheet extends StatefulWidget {
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
   // ── Filter state ──
-  String _selectedIndustry = 'All';
-  String _selectedRisk     = 'Medium';
-  String _selectedStatus   = 'Open';
-  double _roiMin           = 10;
-  double _roiMax           = 30;
+  late String _selectedIndustry;
+  String? _selectedRisk;
+  String? _selectedStatus;
+  late double _roiMin;
+  late double _roiMax;
 
   static const List<String> _industries = [
     'All', 'Tech', 'Finance', 'Healthcare', 'Energy', 'Real Estate',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with existing data from the main screen
+    _selectedIndustry = widget.initialIndustry ?? 'All';
+    _selectedRisk = widget.initialRisk;
+    _selectedStatus = widget.initialStatus;
+    _roiMin = widget.initialRoiMin;
+    _roiMax = widget.initialRoiMax;
+  }
+
   void _resetAll() => setState(() {
     _selectedIndustry = 'All';
-    _selectedRisk     = 'Medium';
-    _selectedStatus   = 'Open';
-    _roiMin           = 10;
-    _roiMax           = 30;
+    _selectedRisk = null;
+    _selectedStatus = null;
+    _roiMin = 0;
+    _roiMax = 30;
   });
 
   Color _riskDot(String level) {
@@ -53,7 +65,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     final double h = MediaQuery.of(context).size.height;
 
     return Container(
-      // sheet takes up to 92 % of screen height
       constraints: BoxConstraints(maxHeight: h * 0.92),
       decoration: BoxDecoration(
         color: const Color(0xFF0F1623),
@@ -62,10 +73,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Drag handle ──
           _DragHandle(w: w),
-
-          // ── Scrollable body ──
           Flexible(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -74,12 +82,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: h * 0.01),
-
-                  // Header row
                   _SheetHeader(w: w, onReset: _resetAll),
                   SizedBox(height: h * 0.03),
-
-                  // ── INDUSTRY ──
                   _SectionLabel(text: 'INDUSTRY', w: w),
                   SizedBox(height: h * 0.015),
                   _IndustryGrid(
@@ -89,19 +93,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     onSelect: (v) => setState(() => _selectedIndustry = v),
                   ),
                   SizedBox(height: h * 0.03),
-
-                  // ── RISK LEVEL ──
                   _SectionLabel(text: 'RISK LEVEL', w: w),
                   SizedBox(height: h * 0.015),
                   _RiskRow(
                     w: w,
-                    selected: _selectedRisk,
+                    selected: _selectedRisk ?? '',
                     dotColor: _riskDot,
-                    onSelect: (v) => setState(() => _selectedRisk = v),
+                    onSelect: (v) => setState(() => _selectedRisk = _selectedRisk == v ? null : v),
                   ),
                   SizedBox(height: h * 0.03),
-
-                  // ── EXPECTED ROI RANGE ──
                   _RoiRangeSection(
                     w: w,
                     roiMin: _roiMin,
@@ -110,31 +110,29 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         setState(() { _roiMin = min; _roiMax = max; }),
                   ),
                   SizedBox(height: h * 0.03),
-
-                  // ── DEAL STATUS ──
                   _SectionLabel(text: 'DEAL STATUS', w: w),
                   SizedBox(height: h * 0.015),
                   _StatusRow(
                     w: w,
-                    selected: _selectedStatus,
-                    onSelect: (v) => setState(() => _selectedStatus = v),
+                    selected: _selectedStatus ?? '',
+                    onSelect: (v) => setState(() => _selectedStatus = _selectedStatus == v ? null : v),
                   ),
-                  SizedBox(height: h * 0.025),
-
-                  // ── Institutional access banner ──
-                  _InstitutionalBanner(w: w),
                   SizedBox(height: h * 0.025),
                 ],
               ),
             ),
           ),
-
-          // ── Sticky Apply button ──
           _ApplyButton(
             w: w,
             onTap: () {
-              // TODO: pass filter values back via callback / provider
-              Navigator.pop(context);
+              // Pass values back to the DealListingScreen cleanly
+              Navigator.pop(context, {
+                'industry': _selectedIndustry,
+                'risk': _selectedRisk,
+                'status': _selectedStatus,
+                'roiMin': _roiMin,
+                'roiMax': _roiMax,
+              });
             },
           ),
         ],
@@ -144,7 +142,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 }
 
 // ─── Drag handle ──────────────────────────────────────────────────────────────
-
 class _DragHandle extends StatelessWidget {
   final double w;
   const _DragHandle({required this.w});
@@ -168,7 +165,6 @@ class _DragHandle extends StatelessWidget {
 }
 
 // ─── Sheet header ─────────────────────────────────────────────────────────────
-
 class _SheetHeader extends StatelessWidget {
   final double w;
   final VoidCallback onReset;
@@ -204,7 +200,6 @@ class _SheetHeader extends StatelessWidget {
 }
 
 // ─── Section label ────────────────────────────────────────────────────────────
-
 class _SectionLabel extends StatelessWidget {
   final String text;
   final double w;
@@ -225,7 +220,6 @@ class _SectionLabel extends StatelessWidget {
 }
 
 // ─── Industry grid (wrap layout) ─────────────────────────────────────────────
-
 class _IndustryGrid extends StatelessWidget {
   final double w;
   final List<String> industries;
@@ -282,7 +276,6 @@ class _IndustryGrid extends StatelessWidget {
 }
 
 // ─── Risk level row ───────────────────────────────────────────────────────────
-
 class _RiskRow extends StatelessWidget {
   final double w;
   final String selected;
@@ -358,7 +351,6 @@ class _RiskRow extends StatelessWidget {
 }
 
 // ─── ROI Range section ────────────────────────────────────────────────────────
-
 class _RoiRangeSection extends StatelessWidget {
   final double w;
   final double roiMin;
@@ -400,7 +392,6 @@ class _RoiRangeSection extends StatelessWidget {
           ],
         ),
         SizedBox(height: w * 0.04),
-        // Range slider
         SliderTheme(
           data: SliderThemeData(
             trackHeight: 4,
@@ -425,7 +416,6 @@ class _RoiRangeSection extends StatelessWidget {
 }
 
 // ─── Deal status row ──────────────────────────────────────────────────────────
-
 class _StatusRow extends StatelessWidget {
   final double w;
   final String selected;
@@ -469,7 +459,6 @@ class _StatusRow extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Radio circle
                     Container(
                       width: w * 0.05,
                       height: w * 0.05,
@@ -516,70 +505,6 @@ class _StatusRow extends StatelessWidget {
   }
 }
 
-// ─── Institutional access banner ──────────────────────────────────────────────
-
-class _InstitutionalBanner extends StatelessWidget {
-  final double w;
-  const _InstitutionalBanner({required this.w});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: w * 0.35,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(w * 0.04),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0D1F3C), Color(0xFF112240)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: const Color(0xFF1E2A3F), width: 1),
-      ),
-      child: Stack(
-        children: [
-          // Decorative diagonal lines (texture)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(w * 0.04),
-            child: CustomPaint(
-              painter: _DiagonalLinePainter(),
-              child: const SizedBox.expand(),
-            ),
-          ),
-          // Content
-          Padding(
-            padding: EdgeInsets.all(w * 0.05),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  'INSTITUTIONAL ACCESS',
-                  style: TextStyle(
-                    color: const Color(0xFF3B82F6),
-                    fontSize: w * 0.028,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-                SizedBox(height: w * 0.015),
-                Text(
-                  '42 Verified Opportunities',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: w * 0.048,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DiagonalLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -603,7 +528,6 @@ class _DiagonalLinePainter extends CustomPainter {
 }
 
 // ─── Apply Filters button ─────────────────────────────────────────────────────
-
 class _ApplyButton extends StatelessWidget {
   final double w;
   final VoidCallback onTap;
