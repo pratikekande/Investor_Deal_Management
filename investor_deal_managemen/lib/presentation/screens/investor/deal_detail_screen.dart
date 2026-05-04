@@ -2,7 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class DealDetailScreen extends StatefulWidget {
-  const DealDetailScreen({super.key});
+  final Map<String, dynamic> deal;
+
+  const DealDetailScreen({super.key, required this.deal});
 
   @override
   State<DealDetailScreen> createState() => _DealDetailScreenState();
@@ -14,20 +16,6 @@ class _DealDetailScreenState extends State<DealDetailScreen>
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-
-  final Map<String, dynamic> _deal = {
-    'company': 'CloudScale AI',
-    'industry': 'TECH',
-    'status': 'OPEN',
-    'description':
-        'CloudScale AI is revolutionizing the high-performance computing landscape by offering decentralized GPU orchestration. Their proprietary stack allows enterprise clients to train massive models at 40% lower costs than traditional cloud providers. With a strong pipeline of Tier-1 logistics and fintech clients, they are scaling for global expansion.',
-    'investment': '₹50,00,000',
-    'roi': '18% p.a.',
-    'risk': 'Medium',
-    'deadline': '30 Jun 2025',
-    'riskAnalysis':
-        'The primary risk factor involves market volatility in the semiconductor supply chain. While CloudScale AI has secured long-term contracts for H100 units, global trade restrictions may affect future hardware acquisition timelines. Medium risk rating is sustained due to robust insurance coverage and reserve hardware pools.',
-  };
 
   @override
   void initState() {
@@ -61,6 +49,23 @@ class _DealDetailScreenState extends State<DealDetailScreen>
     }
   }
 
+  Color _getIndustryColor(String industry) {
+    switch (industry.toLowerCase()) {
+      case 'tech':
+        return const Color(0xFF3B82F6);
+      case 'healthcare':
+        return const Color(0xFF06B6D4);
+      case 'finance':
+        return const Color(0xFF8B5CF6);
+      case 'energy':
+        return const Color(0xFFF59E0B);
+      case 'real estate':
+        return const Color(0xFF22C55E);
+      default:
+        return const Color(0xFF3B82F6);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double deviceWidth = MediaQuery.of(context).size.width;
@@ -86,10 +91,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
             opacity: _fadeAnimation,
             child: Column(
               children: [
-                // App Bar
                 _buildAppBar(deviceWidth, deviceHeight),
-
-                // Scrollable content
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.symmetric(
@@ -100,23 +102,23 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                       children: [
                         SizedBox(height: deviceHeight * 0.015),
 
-                        // Company header card
                         _buildCompanyHeaderCard(deviceWidth, deviceHeight),
 
                         SizedBox(height: deviceHeight * 0.025),
 
-                        // Financial Highlights
                         _buildSectionTitle('Financial Highlights', deviceWidth),
                         SizedBox(height: deviceHeight * 0.012),
                         _buildFinancialGrid(deviceWidth, deviceHeight),
 
                         SizedBox(height: deviceHeight * 0.025),
 
-                        // About the Company
                         _buildSectionTitle('About the Company', deviceWidth),
                         SizedBox(height: deviceHeight * 0.012),
                         Text(
-                          _deal['description'],
+                          'This company is building innovative solutions in the ${widget.deal['industry']} sector. '
+                          'With a strong leadership team and a clear go-to-market strategy, they are '
+                          'positioned for significant growth over the coming years. The business model '
+                          'is asset-light with recurring revenue streams and strong unit economics.',
                           style: TextStyle(
                             color: const Color(0xFF94A3B8),
                             fontSize: deviceWidth * 0.038,
@@ -126,17 +128,14 @@ class _DealDetailScreenState extends State<DealDetailScreen>
 
                         SizedBox(height: deviceHeight * 0.025),
 
-                        // ROI Projection graph
                         _buildROIProjectionCard(deviceWidth, deviceHeight),
 
                         SizedBox(height: deviceHeight * 0.02),
 
-                        // Risk Analysis
                         _buildRiskAnalysisCard(deviceWidth, deviceHeight),
 
                         SizedBox(height: deviceHeight * 0.025),
 
-                        // Visual Assets
                         _buildSectionTitle('Visual Assets', deviceWidth),
                         SizedBox(height: deviceHeight * 0.012),
                         _buildVisualAssets(deviceWidth, deviceHeight),
@@ -147,7 +146,6 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                   ),
                 ),
 
-                // Bottom I'm Interested button
                 _buildBottomButton(deviceWidth, deviceHeight),
               ],
             ),
@@ -187,17 +185,16 @@ class _DealDetailScreenState extends State<DealDetailScreen>
               ],
             ),
           ),
-          Icon(
-            Icons.bookmark_border_rounded,
-            color: const Color(0xFF3B82F6),
-            size: deviceWidth * 0.06,
-          ),
         ],
       ),
     );
   }
 
   Widget _buildCompanyHeaderCard(double deviceWidth, double deviceHeight) {
+    final bool isOpen = widget.deal['status'] == 'OPEN';
+    final Color industryColor =
+        _getIndustryColor(widget.deal['industry'] as String);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(deviceWidth * 0.045),
@@ -213,24 +210,24 @@ class _DealDetailScreenState extends State<DealDetailScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Company logo
               Container(
                 width: deviceWidth * 0.14,
                 height: deviceWidth * 0.14,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(deviceWidth * 0.03),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                  gradient: LinearGradient(
+                    colors: [
+                      industryColor.withOpacity(0.3),
+                      industryColor.withOpacity(0.7),
+                    ],
                   ),
                 ),
                 child: Icon(
-                  Icons.hub_outlined,
+                  Icons.business_outlined,
                   color: Colors.white,
                   size: deviceWidth * 0.07,
                 ),
               ),
-
-              // Industry + Status chips
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -240,14 +237,14 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                       vertical: deviceHeight * 0.004,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withOpacity(0.15),
+                      color: industryColor.withOpacity(0.15),
                       borderRadius:
                           BorderRadius.circular(deviceWidth * 0.015),
                     ),
                     child: Text(
-                      _deal['industry'],
+                      widget.deal['industry'],
                       style: TextStyle(
-                        color: const Color(0xFF3B82F6),
+                        color: industryColor,
                         fontSize: deviceWidth * 0.028,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
@@ -261,11 +258,16 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                       vertical: deviceHeight * 0.004,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF22C55E).withOpacity(0.15),
+                      color: (isOpen
+                              ? const Color(0xFF22C55E)
+                              : const Color(0xFFEF4444))
+                          .withOpacity(0.15),
                       borderRadius:
                           BorderRadius.circular(deviceWidth * 0.015),
                       border: Border.all(
-                        color: const Color(0xFF22C55E),
+                        color: isOpen
+                            ? const Color(0xFF22C55E)
+                            : const Color(0xFFEF4444),
                         width: 1,
                       ),
                     ),
@@ -275,16 +277,20 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                         Container(
                           width: deviceWidth * 0.018,
                           height: deviceWidth * 0.018,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF22C55E),
+                          decoration: BoxDecoration(
+                            color: isOpen
+                                ? const Color(0xFF22C55E)
+                                : const Color(0xFFEF4444),
                             shape: BoxShape.circle,
                           ),
                         ),
                         SizedBox(width: deviceWidth * 0.015),
                         Text(
-                          _deal['status'],
+                          widget.deal['status'],
                           style: TextStyle(
-                            color: const Color(0xFF22C55E),
+                            color: isOpen
+                                ? const Color(0xFF22C55E)
+                                : const Color(0xFFEF4444),
                             fontSize: deviceWidth * 0.028,
                             fontWeight: FontWeight.w700,
                           ),
@@ -299,9 +305,8 @@ class _DealDetailScreenState extends State<DealDetailScreen>
 
           SizedBox(height: deviceHeight * 0.015),
 
-          // Company name
           Text(
-            _deal['company'],
+            widget.deal['company'],
             style: TextStyle(
               color: Colors.white,
               fontSize: deviceWidth * 0.065,
@@ -312,7 +317,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
           SizedBox(height: deviceHeight * 0.006),
 
           Text(
-            'Next-generation distributed GPU computing infrastructure for sovereign LLMs.',
+            'A leading ${widget.deal['industry'].toString().toLowerCase()} company driving innovation and growth.',
             style: TextStyle(
               color: const Color(0xFF94A3B8),
               fontSize: deviceWidth * 0.036,
@@ -339,23 +344,25 @@ class _DealDetailScreenState extends State<DealDetailScreen>
     final List<Map<String, dynamic>> stats = [
       {
         'label': 'INVESTMENT\nREQUIRED',
-        'value': _deal['investment'],
+        'value': widget.deal['investment'],
         'valueColor': Colors.white,
       },
       {
         'label': 'EXPECTED ROI',
-        'value': _deal['roi'],
+        'value': '${widget.deal['roi']}%',
         'valueColor': const Color(0xFF22C55E),
       },
       {
         'label': 'RISK LEVEL',
-        'value': _deal['risk'],
-        'valueColor': _getRiskColor(_deal['risk']),
+        'value': widget.deal['risk'],
+        'valueColor': _getRiskColor(widget.deal['risk']),
       },
       {
-        'label': 'DEAL DEADLINE',
-        'value': _deal['deadline'],
-        'valueColor': Colors.white,
+        'label': 'DEAL STATUS',
+        'value': widget.deal['status'],
+        'valueColor': widget.deal['status'] == 'OPEN'
+            ? const Color(0xFF22C55E)
+            : const Color(0xFFEF4444),
       },
     ];
 
@@ -375,10 +382,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF162035),
             borderRadius: BorderRadius.circular(deviceWidth * 0.03),
-            border: Border.all(
-              color: const Color(0xFF2A3A55),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFF2A3A55), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,7 +452,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                 ),
               ),
               Text(
-                '+18.4% Est.',
+                '+${widget.deal['roi']}% Est.',
                 style: TextStyle(
                   color: const Color(0xFF22C55E),
                   fontSize: deviceWidth * 0.036,
@@ -480,19 +484,14 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                       showTitles: true,
                       interval: 2.75,
                       getTitlesWidget: (value, meta) {
-                        const months = [
-                          'JAN',
-                          'APR',
-                          'JUL',
-                          'OCT',
-                          'DEC',
-                        ];
+                        const months = ['JAN', 'APR', 'JUL', 'OCT', 'DEC'];
                         final idx = (value / 2.75).round();
                         if (idx < 0 || idx >= months.length) {
                           return const SizedBox.shrink();
                         }
                         return Padding(
-                          padding: EdgeInsets.only(top: deviceHeight * 0.008),
+                          padding:
+                              EdgeInsets.only(top: deviceHeight * 0.008),
                           child: Text(
                             months[idx],
                             style: TextStyle(
@@ -540,55 +539,57 @@ class _DealDetailScreenState extends State<DealDetailScreen>
     );
   }
 
-  // ✅ FIXED - no more double.infinity height inside Row
   Widget _buildRiskAnalysisCard(double deviceWidth, double deviceHeight) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(deviceWidth * 0.045),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E2A45),
-        borderRadius: BorderRadius.circular(deviceWidth * 0.04),
-        border: Border(
-          left: BorderSide(
-            color: const Color(0xFFF59E0B),
-            width: deviceWidth * 0.012,
+    final Color riskColor = _getRiskColor(widget.deal['risk'] as String);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(deviceWidth * 0.04),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(deviceWidth * 0.045),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E2A45),
+          border: Border(
+            left: BorderSide(color: riskColor, width: deviceWidth * 0.012),
+            top: const BorderSide(color: Color(0xFF2A3A55), width: 1),
+            right: const BorderSide(color: Color(0xFF2A3A55), width: 1),
+            bottom: const BorderSide(color: Color(0xFF2A3A55), width: 1),
           ),
-          top: const BorderSide(color: Color(0xFF2A3A55), width: 1),
-          right: const BorderSide(color: Color(0xFF2A3A55), width: 1),
-          bottom: const BorderSide(color: Color(0xFF2A3A55), width: 1),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: const Color(0xFFF59E0B),
-                size: deviceWidth * 0.05,
-              ),
-              SizedBox(width: deviceWidth * 0.02),
-              Text(
-                'Risk Analysis',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: deviceWidth * 0.046,
-                  fontWeight: FontWeight.w700,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: riskColor,
+                  size: deviceWidth * 0.05,
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: deviceHeight * 0.012),
-          Text(
-            _deal['riskAnalysis'],
-            style: TextStyle(
-              color: const Color(0xFF94A3B8),
-              fontSize: deviceWidth * 0.036,
-              height: 1.6,
+                SizedBox(width: deviceWidth * 0.02),
+                Text(
+                  'Risk Analysis',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: deviceWidth * 0.046,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            SizedBox(height: deviceHeight * 0.012),
+            Text(
+              'The ${widget.deal['risk'].toString().toLowerCase()} risk rating for this deal reflects current '
+              'market conditions and the company\'s fundamentals. Investors should review all '
+              'documentation carefully and consider their personal risk appetite before proceeding.',
+              style: TextStyle(
+                color: const Color(0xFF94A3B8),
+                fontSize: deviceWidth * 0.036,
+                height: 1.6,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -667,7 +668,6 @@ class _DealDetailScreenState extends State<DealDetailScreen>
               behavior: SnackBarBehavior.floating,
             ),
           );
-          // TODO: Connect to InterestBloc
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),

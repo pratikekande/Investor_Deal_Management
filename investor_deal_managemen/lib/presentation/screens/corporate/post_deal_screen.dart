@@ -18,11 +18,11 @@ class PostNewDealScreen extends StatefulWidget {
 class _PostNewDealScreenState extends State<PostNewDealScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _titleController    = TextEditingController();
-  final _companyController  = TextEditingController();
+  final _titleController      = TextEditingController();
+  final _companyController    = TextEditingController();
   final _investmentController = TextEditingController();
-  final _roiController      = TextEditingController();
-  final _deadlineController = TextEditingController();
+  final _roiController        = TextEditingController();
+  final _deadlineController   = TextEditingController();
 
   String? _selectedIndustry;
   String  _riskLevel = 'Medium';
@@ -40,12 +40,11 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
 
   static const List<String> _riskOptions = ['Low', 'Medium', 'High'];
 
-  // Risk level → accent colour
   Color _riskColor(String level) {
     switch (level) {
-      case 'Low':    return const Color(0xFF22C55E);
-      case 'High':   return const Color(0xFFEF4444);
-      default:       return const Color(0xFFF59E0B);
+      case 'Low':  return const Color(0xFF22C55E);
+      case 'High': return const Color(0xFFEF4444);
+      default:     return const Color(0xFFF59E0B);
     }
   }
 
@@ -77,7 +76,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
 
   void _submitDeal() {
     if (_formKey.currentState?.validate() ?? false) {
-      // TODO: wire up to your backend / state management
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFF22C55E),
@@ -120,7 +118,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
             // ── Scrollable form body ──
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.symmetric(
                   horizontal: w * 0.05,
                   vertical: h * 0.03,
@@ -128,7 +125,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Deal Title
                     _FieldLabel(text: 'Deal Title', w: w),
                     SizedBox(height: h * 0.01),
                     _InputField(
@@ -140,7 +136,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
                     ),
                     SizedBox(height: h * 0.025),
 
-                    // Company Name
                     _FieldLabel(text: 'Company Name', w: w),
                     SizedBox(height: h * 0.01),
                     _InputField(
@@ -152,7 +147,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
                     ),
                     SizedBox(height: h * 0.025),
 
-                    // Industry dropdown
                     _FieldLabel(text: 'Industry', w: w),
                     SizedBox(height: h * 0.01),
                     _IndustryDropdown(
@@ -163,7 +157,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
                     ),
                     SizedBox(height: h * 0.025),
 
-                    // Investment Required
                     _FieldLabel(text: 'Investment Required (INR)', w: w),
                     SizedBox(height: h * 0.01),
                     _InputField(
@@ -178,7 +171,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
                     ),
                     SizedBox(height: h * 0.025),
 
-                    // Expected ROI
                     _FieldLabel(text: 'Expected ROI (%)', w: w),
                     SizedBox(height: h * 0.01),
                     _InputField(
@@ -196,7 +188,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
                     ),
                     SizedBox(height: h * 0.025),
 
-                    // Risk Level
                     _FieldLabel(text: 'Risk Level', w: w),
                     SizedBox(height: h * 0.015),
                     _RiskSelector(
@@ -208,7 +199,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
                     ),
                     SizedBox(height: h * 0.025),
 
-                    // Deal Deadline
                     _FieldLabel(text: 'Deal Deadline', w: w),
                     SizedBox(height: h * 0.01),
                     _InputField(
@@ -260,16 +250,6 @@ class _PostNewDealScreenState extends State<PostNewDealScreen> {
           fontWeight: FontWeight.w700,
         ),
       ),
-      actions: [
-        Padding(
-          padding: EdgeInsets.only(right: w * 0.04),
-          child: Icon(
-            Icons.tune_rounded,
-            color: const Color(0xFF3B82F6),
-            size: w * 0.06,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -420,23 +400,17 @@ class _IndustryDropdown extends StatelessWidget {
           value: value,
           isExpanded: true,
           dropdownColor: const Color(0xFF111827),
-          iconEnabledColor: const Color(0xFF3B82F6),
-          icon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.keyboard_arrow_down_rounded,
-                  color: const Color(0xFF3B82F6), size: w * 0.055),
-              SizedBox(width: w * 0.01),
-              Icon(Icons.keyboard_arrow_down_rounded,
-                  color: const Color(0xFF3B82F6), size: w * 0.055),
-            ],
+          // ── FIXED: single chevron icon ──
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: const Color(0xFF3B82F6),
+            size: w * 0.06,
           ),
           hint: Text(
             'Select Industry',
             style: TextStyle(
-              color: const Color(0xFFD1D5DB),
-              fontSize: w * 0.042,
-              fontWeight: FontWeight.w500,
+              color: const Color(0xFF4B5563),
+              fontSize: w * 0.04,
             ),
           ),
           style: TextStyle(

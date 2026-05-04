@@ -1,12 +1,5 @@
 import 'package:flutter/material.dart';
 
-// ════════════════════════════════════════════════════════════════════════════
-//  MyDealsScreen
-//  Navigate to it:
-//    Navigator.push(context,
-//      MaterialPageRoute(builder: (_) => const MyDealsScreen()));
-// ════════════════════════════════════════════════════════════════════════════
-
 enum _DealFilter { all, open, closed }
 
 class MyDealsScreen extends StatefulWidget {
@@ -19,7 +12,6 @@ class MyDealsScreen extends StatefulWidget {
 class _MyDealsScreenState extends State<MyDealsScreen> {
   _DealFilter _activeFilter = _DealFilter.all;
 
-  // ── Sample data – replace with your model/state management ──
   static const List<_DealData> _allDeals = [
     _DealData(
       title: 'Project Phoenix - SaaS Expansion',
@@ -63,19 +55,14 @@ class _MyDealsScreenState extends State<MyDealsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
-      bottomNavigationBar: _MyDealsBottomNav(w: w),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── AppBar ──
             _MyDealsAppBar(w: w),
             Container(height: 1, color: const Color(0xFF1E2A3F)),
-
-            // ── Scrollable content ──
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.symmetric(
                   horizontal: w * 0.05,
                   vertical: h * 0.025,
@@ -83,19 +70,14 @@ class _MyDealsScreenState extends State<MyDealsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Portfolio summary banner
                     _PortfolioBanner(w: w),
                     SizedBox(height: h * 0.025),
-
-                    // Filter pills
                     _FilterRow(
                       w: w,
                       active: _activeFilter,
                       onSelect: (f) => setState(() => _activeFilter = f),
                     ),
                     SizedBox(height: h * 0.025),
-
-                    // Deal cards
                     ..._filteredDeals.map(
                       (deal) => Padding(
                         padding: EdgeInsets.only(bottom: h * 0.02),
@@ -113,7 +95,7 @@ class _MyDealsScreenState extends State<MyDealsScreen> {
   }
 }
 
-// ─── Data model ───────────────────────────────────────────────────────────────
+// ─── Data Model ───────────────────────────────────────────────────────────────
 
 class _DealData {
   final String title;
@@ -152,40 +134,13 @@ class _MyDealsAppBar extends StatelessWidget {
         horizontal: w * 0.05,
         vertical: w * 0.04,
       ),
-      child: Row(
-        children: [
-          Icon(Icons.menu_rounded, color: Colors.white, size: w * 0.065),
-          SizedBox(width: w * 0.04),
-          Expanded(
-            child: Text(
-              'My Deals',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: w * 0.058,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Icon(Icons.tune_rounded, color: Colors.white, size: w * 0.06),
-          SizedBox(width: w * 0.04),
-          // Avatar
-          Container(
-            width: w * 0.11,
-            height: w * 0.11,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF3B82F6), width: 2),
-              color: const Color(0xFF1E2A3F),
-            ),
-            child: ClipOval(
-              child: Icon(
-                Icons.person,
-                color: const Color(0xFF9CA3AF),
-                size: w * 0.07,
-              ),
-            ),
-          ),
-        ],
+      child: Text(
+        'My Deals',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: w * 0.058,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -212,7 +167,6 @@ class _PortfolioBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Left stat
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,20 +192,18 @@ class _PortfolioBanner extends StatelessWidget {
               ],
             ),
           ),
-          // Divider
           Container(
             width: 1,
             height: w * 0.12,
             color: const Color(0xFF1E2A3F),
             margin: EdgeInsets.symmetric(horizontal: w * 0.04),
           ),
-          // Right stat
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '24 Interests Received',
+                  '24 Interests',
                   style: TextStyle(
                     color: const Color(0xFF3B82F6),
                     fontSize: w * 0.042,
@@ -387,7 +339,6 @@ class _DealCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Title ──
           Text(
             deal.title,
             style: TextStyle(
@@ -397,22 +348,14 @@ class _DealCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: w * 0.03),
-
-          // ── Status + Tag chips ──
           Row(
             children: [
               _StatusChip(label: deal.status, color: statusColor, w: w),
               SizedBox(width: w * 0.02),
-              _StatusChip(
-                label: deal.tag,
-                color: const Color(0xFF3B82F6),
-                w: w,
-              ),
+              _StatusChip(label: deal.tag, color: const Color(0xFF3B82F6), w: w),
             ],
           ),
           SizedBox(height: w * 0.05),
-
-          // ── Metrics row ──
           Row(
             children: [
               _MetricCol(
@@ -444,15 +387,10 @@ class _DealCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: w * 0.05),
-
-          // ── Investors interested ──
           Row(
             children: [
-              Icon(
-                Icons.people_rounded,
-                color: const Color(0xFF3B82F6),
-                size: w * 0.055,
-              ),
+              Icon(Icons.people_rounded,
+                  color: const Color(0xFF3B82F6), size: w * 0.055),
               SizedBox(width: w * 0.02),
               Text(
                 '${deal.investors} Investors Interested',
@@ -465,8 +403,6 @@ class _DealCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: w * 0.045),
-
-          // ── Action buttons ──
           Row(
             children: [
               Expanded(
@@ -511,19 +447,12 @@ class _StatusChip extends StatelessWidget {
   final Color color;
   final double w;
 
-  const _StatusChip({
-    required this.label,
-    required this.color,
-    required this.w,
-  });
+  const _StatusChip({required this.label, required this.color, required this.w});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: w * 0.03,
-        vertical: w * 0.012,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: w * 0.03, vertical: w * 0.012),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(w * 0.015),
@@ -629,94 +558,6 @@ class _ActionBtn extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ─── Bottom Nav ───────────────────────────────────────────────────────────────
-
-class _MyDealsBottomNav extends StatelessWidget {
-  final double w;
-  const _MyDealsBottomNav({required this.w});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF111827),
-        border: Border(top: BorderSide(color: Color(0xFF1E2A3F), width: 1)),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: w * 0.06,
-        vertical: w * 0.04,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavItem(
-            icon: Icons.grid_view_rounded,
-            label: 'DASHBOARD',
-            isActive: false,
-            w: w,
-            onTap: () => Navigator.maybePop(context),
-          ),
-          _NavItem(
-            icon: Icons.business_center_rounded,
-            label: 'MY DEALS',
-            isActive: true,
-            w: w,
-            onTap: () {},
-          ),
-          _NavItem(
-            icon: Icons.person_outline_rounded,
-            label: 'PROFILE',
-            isActive: false,
-            w: w,
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final double w;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.w,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Color color =
-        isActive ? const Color(0xFF3B82F6) : const Color(0xFF4B5563);
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: w * 0.065),
-          SizedBox(height: w * 0.012),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: w * 0.025,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
       ),
     );
   }

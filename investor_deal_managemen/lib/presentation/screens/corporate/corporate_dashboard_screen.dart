@@ -1,16 +1,5 @@
 import 'package:flutter/material.dart';
-
-// ════════════════════════════════════════════════════════════════════════════
-//  DealDashboardScreen
-//  Drop this file into your project and navigate to it like any other screen:
-//
-//    Navigator.push(context,
-//      MaterialPageRoute(builder: (_) => const DealDashboardScreen()));
-//
-//  The screen owns its own Scaffold (background + SafeArea + scroll).
-//  If your app already provides a bottom nav bar via a shell/navigator,
-//  remove the bottomNavigationBar parameter from the Scaffold below.
-// ════════════════════════════════════════════════════════════════════════════
+import 'package:investor_deal_managemen/presentation/screens/corporate/post_deal_screen.dart';
 
 class DealDashboardScreen extends StatelessWidget {
   const DealDashboardScreen({super.key});
@@ -22,68 +11,82 @@ class DealDashboardScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
-      // ── Remove bottomNavigationBar if your shell already handles navigation ──
-      bottomNavigationBar: _DashboardBottomNav(w: w),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: w * 0.05),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: h * 0.025),
-              _DashboardHeader(w: w),
-              SizedBox(height: h * 0.025),
-              _StatsRow(w: w),
-              SizedBox(height: h * 0.02),
-              _InvestorCard(w: w, h: h),
-              SizedBox(height: h * 0.025),
-              _PostDealButton(w: w),
-              SizedBox(height: h * 0.03),
-              _RecentDealsHeader(w: w),
-              SizedBox(height: h * 0.015),
-              _DealCard(
-                w: w,
-                title: 'Project Phoenix',
-                subtitle: 'SaaS Expansion',
-                tag: 'Technology',
-                status: 'OPEN',
-                progress: 0.75,
-                progressLabel: '75%',
-                investment: '\$2.5M',
-                roi: '18.5%',
-                roiColor: const Color(0xFF22C55E),
-                risk: 'Low',
-                riskColor: const Color(0xFF22C55E),
-                primaryBtnLabel: 'Edit Deal',
-                secondaryBtnLabel: 'Close Deal',
-                secondaryBtnColor: const Color(0xFFEF4444),
-                isClosed: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Fixed header (never scrolls) ──
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: w * 0.05),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: h * 0.025),
+                  _DashboardHeader(w: w),
+                  SizedBox(height: h * 0.025),
+                ],
               ),
-              SizedBox(height: h * 0.018),
-              _DealCard(
-                w: w,
-                title: 'GreenHorizon',
-                subtitle: 'Solar Farm',
-                tag: 'Energy',
-                status: 'CLOSED',
-                progress: 1.0,
-                progressLabel: '100%',
-                investment: '\$8.2M',
-                roi: '12.1%',
-                roiColor: const Color(0xFF22C55E),
-                risk: 'Med',
-                riskColor: const Color(0xFFF59E0B),
-                primaryBtnLabel: 'Archive',
-                secondaryBtnLabel: 'View Summary',
-                secondaryBtnColor: const Color(0xFF3B82F6),
-                isClosed: true,
+            ),
+            // ── Scrollable body ──
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: w * 0.05),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _StatsRow(w: w),
+                    SizedBox(height: h * 0.02),
+                    _InvestorCard(w: w, h: h),
+                    SizedBox(height: h * 0.025),
+                    _PostDealButton(w: w),
+                    SizedBox(height: h * 0.03),
+                    _RecentDealsHeader(w: w),
+                    SizedBox(height: h * 0.015),
+                    _DealCard(
+                      w: w,
+                      title: 'Project Phoenix',
+                      subtitle: 'SaaS Expansion',
+                      tag: 'Technology',
+                      status: 'OPEN',
+                      progress: 0.75,
+                      progressLabel: '75%',
+                      investment: '₹2.5M',
+                      roi: '18.5%',
+                      roiColor: const Color(0xFF22C55E),
+                      risk: 'Low',
+                      riskColor: const Color(0xFF22C55E),
+                      primaryBtnLabel: 'Edit Deal',
+                      secondaryBtnLabel: 'Close Deal',
+                      secondaryBtnColor: const Color(0xFFEF4444),
+                      isClosed: false,
+                    ),
+                    SizedBox(height: h * 0.018),
+                    _DealCard(
+                      w: w,
+                      title: 'GreenHorizon',
+                      subtitle: 'Solar Farm',
+                      tag: 'Energy',
+                      status: 'CLOSED',
+                      progress: 1.0,
+                      progressLabel: '100%',
+                      investment: '₹8.2M',
+                      roi: '12.1%',
+                      roiColor: const Color(0xFF22C55E),
+                      risk: 'Med',
+                      riskColor: const Color(0xFFF59E0B),
+                      primaryBtnLabel: 'Archive',
+                      secondaryBtnLabel: 'View Summary',
+                      secondaryBtnColor: const Color(0xFF3B82F6),
+                      isClosed: true,
+                    ),
+                    SizedBox(height: h * 0.018),
+                    _MarketInsightsCard(w: w, h: h),
+                    SizedBox(height: h * 0.03),
+                  ],
+                ),
               ),
-              SizedBox(height: h * 0.018),
-              _MarketInsightsCard(w: w, h: h),
-              SizedBox(height: h * 0.03),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -98,115 +101,32 @@ class _DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Hello, TechCorp ',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: w * 0.065,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                Text('👋', style: TextStyle(fontSize: w * 0.06)),
-              ],
-            ),
-            SizedBox(height: w * 0.008),
-            Text(
-              'Manage your deals',
-              style: TextStyle(
-                color: const Color(0xFF6B7280),
-                fontSize: w * 0.035,
-              ),
-            ),
-          ],
-        ),
         Row(
           children: [
-            _NotificationBtn(w: w),
-            SizedBox(width: w * 0.025),
-            _AvatarBadge(w: w),
+            Text(
+              'Hello, TechCorp ',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: w * 0.065,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
+            ),
+            Text('👋', style: TextStyle(fontSize: w * 0.06)),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class _NotificationBtn extends StatelessWidget {
-  final double w;
-  const _NotificationBtn({required this.w});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: w * 0.1,
-          height: w * 0.1,
-          decoration: BoxDecoration(
-            color: const Color(0xFF141B2D),
-            borderRadius: BorderRadius.circular(w * 0.03),
-            border: Border.all(color: const Color(0xFF1E2A3F), width: 1),
-          ),
-          child: Icon(
-            Icons.notifications_none_rounded,
-            color: Colors.white,
-            size: w * 0.055,
-          ),
-        ),
-        Positioned(
-          top: -2,
-          right: -2,
-          child: Container(
-            width: w * 0.025,
-            height: w * 0.025,
-            decoration: const BoxDecoration(
-              color: Color(0xFF3B82F6),
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AvatarBadge extends StatelessWidget {
-  final double w;
-  const _AvatarBadge({required this.w});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: w * 0.1,
-      height: w * 0.1,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(w * 0.03),
-      ),
-      child: Center(
-        child: Text(
-          'TC',
+        SizedBox(height: w * 0.008),
+        Text(
+          'Manage your deals',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: w * 0.033,
-            fontWeight: FontWeight.w700,
+            color: const Color(0xFF6B7280),
+            fontSize: w * 0.035,
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -236,6 +156,7 @@ class _StatTile extends StatelessWidget {
   final String label;
   final String value;
   final Color valueColor;
+
   const _StatTile({
     required this.w,
     required this.label,
@@ -430,7 +351,10 @@ class _PostDealButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PostNewDealScreen()),
+      ),
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: w * 0.043),
@@ -487,17 +411,6 @@ class _RecentDealsHeader extends StatelessWidget {
             color: Colors.white,
             fontSize: w * 0.05,
             fontWeight: FontWeight.w700,
-          ),
-        ),
-        GestureDetector(
-          onTap: () {},
-          child: Text(
-            'View all',
-            style: TextStyle(
-              color: const Color(0xFF3B82F6),
-              fontSize: w * 0.035,
-              fontWeight: FontWeight.w500,
-            ),
           ),
         ),
       ],
@@ -568,7 +481,12 @@ class _DealCard extends StatelessWidget {
           SizedBox(height: w * 0.025),
           Row(
             children: [
-              _Chip(label: tag, bgColor: const Color(0xFF374151), textColor: const Color(0xFFD1D5DB), w: w),
+              _Chip(
+                label: tag,
+                bgColor: const Color(0xFF374151),
+                textColor: const Color(0xFFD1D5DB),
+                w: w,
+              ),
               SizedBox(width: w * 0.02),
               _Chip(
                 label: status,
@@ -582,11 +500,21 @@ class _DealCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Funding Progress',
-                  style: TextStyle(color: const Color(0xFF9CA3AF), fontSize: w * 0.033)),
-              Text(progressLabel,
-                  style: TextStyle(
-                      color: Colors.white, fontSize: w * 0.033, fontWeight: FontWeight.w600)),
+              Text(
+                'Funding Progress',
+                style: TextStyle(
+                  color: const Color(0xFF9CA3AF),
+                  fontSize: w * 0.033,
+                ),
+              ),
+              Text(
+                progressLabel,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: w * 0.033,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
           SizedBox(height: w * 0.02),
@@ -608,9 +536,9 @@ class _DealCard extends StatelessWidget {
                 child: _MetricBlock(
                   w: w,
                   topLabel: 'INVESTMENT',
+                  topLabelSuffix: 'ROI',
                   bottomLeft: investment,
                   bottomLeftColor: Colors.white,
-                  topLabelSuffix: 'ROI',
                   bottomRight: roi,
                   bottomRightColor: roiColor,
                 ),
@@ -660,6 +588,7 @@ class _Chip extends StatelessWidget {
   final Color bgColor;
   final Color textColor;
   final double w;
+
   const _Chip({
     required this.label,
     required this.bgColor,
@@ -675,9 +604,14 @@ class _Chip extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(w * 0.02),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: textColor, fontSize: w * 0.03, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: w * 0.03,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -718,18 +652,24 @@ class _MetricBlock extends StatelessWidget {
         SizedBox(height: w * 0.01),
         Row(
           children: [
-            Text(bottomLeft,
-                style: TextStyle(
-                    color: bottomLeftColor,
-                    fontSize: w * 0.045,
-                    fontWeight: FontWeight.w700)),
+            Text(
+              bottomLeft,
+              style: TextStyle(
+                color: bottomLeftColor,
+                fontSize: w * 0.045,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             if (bottomRight != null) ...[
               SizedBox(width: w * 0.025),
-              Text(bottomRight!,
-                  style: TextStyle(
-                      color: bottomRightColor ?? Colors.white,
-                      fontSize: w * 0.04,
-                      fontWeight: FontWeight.w700)),
+              Text(
+                bottomRight!,
+                style: TextStyle(
+                  color: bottomRightColor ?? Colors.white,
+                  fontSize: w * 0.04,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ],
         ),
@@ -764,11 +704,14 @@ class _OutlineBtn extends StatelessWidget {
           border: Border.all(color: borderColor, width: 1.5),
         ),
         child: Center(
-          child: Text(label,
-              style: TextStyle(
-                  color: textColor,
-                  fontSize: w * 0.035,
-                  fontWeight: FontWeight.w600)),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontSize: w * 0.035,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ),
     );
@@ -872,67 +815,4 @@ class _WavePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ─── Bottom Nav (remove if your app shell already has one) ───────────────────
-
-class _DashboardBottomNav extends StatelessWidget {
-  final double w;
-  const _DashboardBottomNav({required this.w});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF0A0E1A),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: w * 0.06, vertical: w * 0.04),
-        decoration: const BoxDecoration(
-          color: Color(0xFF111827),
-          border: Border(top: BorderSide(color: Color(0xFF1E2A3F), width: 1)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _NavItem(icon: Icons.grid_view_rounded, label: 'DASHBOARD', isActive: true, w: w),
-            _NavItem(icon: Icons.business_center_rounded, label: 'MY DEALS', isActive: false, w: w),
-            _NavItem(icon: Icons.person_outline_rounded, label: 'PROFILE', isActive: false, w: w),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final double w;
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.w,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Color color = isActive ? const Color(0xFF3B82F6) : const Color(0xFF4B5563);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: w * 0.065),
-        SizedBox(height: w * 0.012),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: w * 0.025,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            letterSpacing: 0.8,
-          ),
-        ),
-      ],
-    );
-  }
 }

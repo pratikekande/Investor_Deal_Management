@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:investor_deal_managemen/presentation/screens/investor/deal_detail_screen.dart';
 
 class MyInterestsScreen extends StatefulWidget {
   const MyInterestsScreen({super.key});
@@ -9,12 +10,10 @@ class MyInterestsScreen extends StatefulWidget {
 
 class _MyInterestsScreenState extends State<MyInterestsScreen>
     with TickerProviderStateMixin {
-  int _selectedNavIndex = 1; // Portfolio tab active
-
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
-  List<Map<String, dynamic>> _interestedDeals = [
+  final List<Map<String, dynamic>> _interestedDeals = [
     {
       'company': 'CloudScale AI',
       'category': 'Enterprise AI',
@@ -98,6 +97,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
       builder: (context) {
         final double deviceWidth = MediaQuery.of(context).size.width;
         final double deviceHeight = MediaQuery.of(context).size.height;
+
         return AlertDialog(
           backgroundColor: const Color(0xFF1E2A45),
           shape: RoundedRectangleBorder(
@@ -181,12 +181,14 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
             opacity: _fadeAnimation,
             child: Column(
               children: [
-                // App Bar
                 _buildAppBar(deviceWidth, deviceHeight),
 
-                Divider(color: const Color(0xFF1E2A45), thickness: 1, height: 1),
+                Divider(
+                  color: const Color(0xFF1E2A45),
+                  thickness: 1,
+                  height: 1,
+                ),
 
-                // Content
                 Expanded(
                   child: _interestedDeals.isEmpty
                       ? _buildEmptyState(deviceWidth, deviceHeight)
@@ -198,17 +200,16 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                             children: [
                               SizedBox(height: deviceHeight * 0.025),
 
-                              // Summary card
                               _buildSummaryCard(deviceWidth, deviceHeight),
 
                               SizedBox(height: deviceHeight * 0.025),
 
-                              // Deal cards
                               ...List.generate(
                                 _interestedDeals.length,
                                 (index) => Padding(
                                   padding: EdgeInsets.only(
-                                      bottom: deviceHeight * 0.02),
+                                    bottom: deviceHeight * 0.02,
+                                  ),
                                   child: _buildInterestCard(
                                     _interestedDeals[index],
                                     index,
@@ -223,9 +224,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                           ),
                         ),
                 ),
-
-                // Bottom Nav
-                _buildBottomNavBar(deviceWidth, deviceHeight),
               ],
             ),
           ),
@@ -263,11 +261,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                 ),
               ),
             ],
-          ),
-          Icon(
-            Icons.filter_list_rounded,
-            color: const Color(0xFF3B82F6),
-            size: deviceWidth * 0.06,
           ),
         ],
       ),
@@ -363,7 +356,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Company icon
                 Container(
                   width: deviceWidth * 0.14,
                   height: deviceWidth * 0.14,
@@ -384,7 +376,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
 
                 SizedBox(width: deviceWidth * 0.04),
 
-                // Company name + status + category
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,7 +391,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
                       SizedBox(height: deviceHeight * 0.006),
                       Row(
                         children: [
-                          // Status chip
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: deviceWidth * 0.025,
@@ -480,11 +470,17 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
             // Buttons row
             Row(
               children: [
-                // View Details button
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      // TODO: Navigate to Deal Detail
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                    builder: (context) {
+                      return DealDetailScreen(deal: deal,);
+                    },
+                  ),
+                );
                     },
                     child: Container(
                       height: deviceHeight * 0.055,
@@ -513,7 +509,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
 
                 SizedBox(width: deviceWidth * 0.03),
 
-                // Delete button
                 GestureDetector(
                   onTap: () => _removeInterest(index),
                   child: Container(
@@ -631,59 +626,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar(double deviceWidth, double deviceHeight) {
-    final List<Map<String, dynamic>> navItems = [
-      {'icon': Icons.handshake_outlined, 'label': 'DEALS'},
-      {'icon': Icons.pie_chart_outline_rounded, 'label': 'PORTFOLIO'},
-      {'icon': Icons.insights_rounded, 'label': 'INSIGHTS'},
-      {'icon': Icons.settings_outlined, 'label': 'SETTINGS'},
-    ];
-
-    return Container(
-      height: deviceHeight * 0.09,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E2A45),
-        border: Border(
-          top: BorderSide(color: const Color(0xFF2A3A55), width: 1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(navItems.length, (index) {
-          final bool isActive = _selectedNavIndex == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedNavIndex = index),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  navItems[index]['icon'],
-                  color: isActive
-                      ? const Color(0xFF3B82F6)
-                      : const Color(0xFF94A3B8),
-                  size: deviceWidth * 0.06,
-                ),
-                SizedBox(height: deviceHeight * 0.005),
-                Text(
-                  navItems[index]['label'],
-                  style: TextStyle(
-                    color: isActive
-                        ? const Color(0xFF3B82F6)
-                        : const Color(0xFF94A3B8),
-                    fontSize: deviceWidth * 0.025,
-                    fontWeight:
-                        isActive ? FontWeight.w700 : FontWeight.w500,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
       ),
     );
   }
