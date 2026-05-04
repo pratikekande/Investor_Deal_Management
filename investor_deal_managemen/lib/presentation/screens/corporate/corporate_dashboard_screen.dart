@@ -138,7 +138,7 @@ class _DashboardAppBar extends StatelessWidget {
             ],
           ),
         ),
-        const Divider(color: Color(0xFF1E2A3F), thickness: 1, height: 1),
+        const Divider(color: Color.fromARGB(255, 195, 209, 231), thickness: 1, height: 1),
       ],
     );
   }
