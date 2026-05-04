@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:investor_deal_managemen/domain/entities/deal_entity.dart';
+import 'package:investor_deal_managemen/domain/entities/interest_entity.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_state.dart';
+import 'package:investor_deal_managemen/presentation/bloc/interest/interest_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/interest/interest_event.dart';
+import 'package:investor_deal_managemen/presentation/bloc/interest/interest_state.dart';
 import 'package:investor_deal_managemen/presentation/screens/investor/deal_detail_screen.dart';
 
 class MyInterestsScreen extends StatefulWidget {
@@ -8,61 +16,16 @@ class MyInterestsScreen extends StatefulWidget {
   State<MyInterestsScreen> createState() => _MyInterestsScreenState();
 }
 
-class _MyInterestsScreenState extends State<MyInterestsScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-
-  final List<Map<String, dynamic>> _interestedDeals = [
-    {
-      'company': 'CloudScale AI',
-      'category': 'Enterprise AI',
-      'status': 'OPEN',
-      'minTicket': '₹50L',
-      'roi': '18%',
-      'risk': 'Medium',
-      'icon': Icons.hub_outlined,
-      'iconColor': Color(0xFF6366F1),
-    },
-    {
-      'company': 'FinStream Pro',
-      'category': 'Fintech',
-      'status': 'OPEN',
-      'minTicket': '₹75L',
-      'roi': '22%',
-      'risk': 'High',
-      'icon': Icons.bar_chart_rounded,
-      'iconColor': Color(0xFF22C55E),
-    },
-    {
-      'company': 'SecureVault Tech',
-      'category': 'Cybersecurity',
-      'status': 'CLOSING',
-      'minTicket': '₹25L',
-      'roi': '14%',
-      'risk': 'Low',
-      'icon': Icons.security_rounded,
-      'iconColor': Color(0xFF06B6D4),
-    },
-  ];
-
+class _MyInterestsScreenState extends State<MyInterestsScreen> {
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
-    _fadeController.forward();
-  }
-
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      context
+          .read<InterestBloc>()
+          .add(LoadMyInterestsEvent(authState.user.email));
+    }
   }
 
   Color _getRiskColor(String risk) {
@@ -78,93 +41,62 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
     }
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toUpperCase()) {
-      case 'OPEN':
+  Color _getIndustryColor(String industry) {
+    switch (industry.toLowerCase()) {
+      case 'technology':
+      case 'tech':
         return const Color(0xFF6366F1);
-      case 'CLOSING':
+      case 'healthcare':
+        return const Color(0xFF06B6D4);
+      case 'finance':
+        return const Color(0xFF8B5CF6);
+      case 'energy':
         return const Color(0xFFF59E0B);
-      case 'CLOSED':
-        return const Color(0xFFEF4444);
+      case 'real estate':
+        return const Color(0xFF22C55E);
+      case 'manufacturing':
+        return const Color(0xFFF97316);
+      case 'retail':
+        return const Color(0xFFEC4899);
+      case 'agriculture':
+        return const Color(0xFF84CC16);
       default:
-        return const Color(0xFF94A3B8);
+        return const Color(0xFF6366F1);
     }
   }
 
-  void _removeInterest(int index) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final double deviceWidth = MediaQuery.of(context).size.width;
-        final double deviceHeight = MediaQuery.of(context).size.height;
+  String _parseTotalInvestment(List<InterestEntity> interests) {
+    double total = 0;
+    for (final i in interests) {
+      final cleaned = i.investmentRequired.replaceAll(RegExp(r'[₹,\s]'), '');
+      total += double.tryParse(cleaned) ?? 0;
+    }
+    if (total >= 10000000) {
+      return '₹${(total / 10000000).toStringAsFixed(1)}Cr';
+    } else if (total >= 100000) {
+      return '₹${(total / 100000).toStringAsFixed(1)}L';
+    } else {
+      return '₹${total.toStringAsFixed(0)}';
+    }
+  }
 
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1E2A45),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(deviceWidth * 0.04),
-          ),
-          title: Text(
-            'Remove Interest',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: deviceWidth * 0.045,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to remove your interest in ${_interestedDeals[index]['company']}?',
-            style: TextStyle(
-              color: const Color(0xFF94A3B8),
-              fontSize: deviceWidth * 0.036,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: const Color(0xFF94A3B8),
-                  fontSize: deviceWidth * 0.038,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() => _interestedDeals.removeAt(index));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Interest removed successfully'),
-                    backgroundColor: Color(0xFF1E2A45),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              child: Text(
-                'Remove',
-                style: TextStyle(
-                  color: const Color(0xFFEF4444),
-                  fontSize: deviceWidth * 0.038,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+  /// Extracts the interest list from any state that carries it.
+  List<InterestEntity>? _listFromState(InterestState state) {
+    if (state is InterestsLoaded) return state.interests;
+    if (state is InterestChecked) return state.currentInterests;
+    if (state is InterestOperationSuccess) return state.currentInterests;
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final double deviceWidth = MediaQuery.of(context).size.width;
-    final double deviceHeight = MediaQuery.of(context).size.height;
+    final double w = MediaQuery.of(context).size.width;
+    final double h = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Container(
-        width: deviceWidth,
-        height: deviceHeight,
+        width: w,
+        height: h,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -177,112 +109,130 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
           ),
         ),
         child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Column(
-              children: [
-                _buildAppBar(deviceWidth, deviceHeight),
-                const Divider(
-                  color: Color(0xFF1E2A45),
-                  thickness: 1,
-                  height: 1,
-                ),
-                Expanded(
-                  child: _interestedDeals.isEmpty
-                      ? _buildEmptyState(deviceWidth, deviceHeight)
-                      : SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: deviceWidth * 0.05,
-                          ),
-                          child: Column(
-                            children: [
-                              SizedBox(height: deviceHeight * 0.025),
-                              _buildSummaryCard(deviceWidth, deviceHeight),
-                              SizedBox(height: deviceHeight * 0.025),
-                              ...List.generate(
-                                _interestedDeals.length,
-                                (index) => Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: deviceHeight * 0.02,
-                                  ),
-                                  child: _buildInterestCard(
-                                    _interestedDeals[index],
-                                    index,
-                                    deviceWidth,
-                                    deviceHeight,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: deviceHeight * 0.02),
-                            ],
-                          ),
-                        ),
-                ),
-              ],
-            ),
+          child: BlocConsumer<InterestBloc, InterestState>(
+            listener: (ctx, state) {
+              if (state is InterestOperationSuccess) {
+                ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: const Color(0xFF1E2A45),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              }
+            },
+            builder: (ctx, state) {
+              final List<InterestEntity> list = _listFromState(state) ?? [];
+              final int savedCount = list.length;
+
+              return Column(
+                children: [
+                  _buildAppBar(w, h, savedCount),
+                  Expanded(
+                    child: _buildBody(ctx, state, list, w, h),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildAppBar(double deviceWidth, double deviceHeight) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: deviceWidth * 0.04,
-        vertical: deviceHeight * 0.018,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'My Interests',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: deviceWidth * 0.055,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          // Saved count chip
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: deviceWidth * 0.035,
-              vertical: deviceHeight * 0.007,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(deviceWidth * 0.02),
-              border: Border.all(
-                color: const Color(0xFF6366F1).withOpacity(0.4),
-                width: 1,
+  Widget _buildAppBar(double w, double h, int savedCount) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(
+              horizontal: w * 0.05, vertical: h * 0.018),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('My Interests',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: w * 0.055,
+                      fontWeight: FontWeight.w700)),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: w * 0.03, vertical: h * 0.006),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(w * 0.025),
+                  border:
+                      Border.all(color: const Color(0xFF6366F1), width: 1),
+                ),
+                child: Text('$savedCount Saved',
+                    style: TextStyle(
+                        color: const Color(0xFF6366F1),
+                        fontSize: w * 0.033,
+                        fontWeight: FontWeight.w700)),
               ),
-            ),
-            child: Text(
-              '${_interestedDeals.length} Saved',
-              style: TextStyle(
-                color: const Color(0xFF818CF8),
-                fontSize: deviceWidth * 0.03,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
+            ],
+          ),
+        ),
+        const Divider(color: Color(0xFF1E2A45), thickness: 1, height: 1),
+      ],
+    );
+  }
+
+  Widget _buildBody(BuildContext ctx, InterestState state,
+      List<InterestEntity> list, double w, double h) {
+    // Show spinner only on the very first load (list is empty and truly loading)
+    if (state is InterestLoading && list.isEmpty) {
+      return const Center(
+          child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+    }
+
+    // If we have a list (from any state), render it
+    if (list.isNotEmpty) {
+      return Column(
+        children: [
+          _buildSummaryCard(list, w, h),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(
+                  horizontal: w * 0.05, vertical: h * 0.01),
+              itemCount: list.length,
+              itemBuilder: (_, i) => Padding(
+                padding: EdgeInsets.only(bottom: h * 0.018),
+                child: _InterestCard(
+                  interest: list[i],
+                  getRiskColor: _getRiskColor,
+                  getIndustryColor: _getIndustryColor,
+                ),
               ),
             ),
           ),
         ],
-      ),
-    );
+      );
+    }
+
+    // Empty state — only shown when list is genuinely empty
+    if (state is InterestsLoaded ||
+        state is InterestChecked ||
+        state is InterestOperationSuccess) {
+      return _buildEmptyState(w, h);
+    }
+
+    if (state is InterestError) {
+      return Center(
+          child: Text(state.message,
+              style: const TextStyle(color: Color(0xFFEF4444))));
+    }
+
+    return const SizedBox.shrink();
   }
 
-  Widget _buildSummaryCard(double deviceWidth, double deviceHeight) {
+  Widget _buildSummaryCard(
+      List<InterestEntity> interests, double w, double h) {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: deviceWidth * 0.05,
-        vertical: deviceHeight * 0.022,
-      ),
+      margin: EdgeInsets.symmetric(
+          horizontal: w * 0.05, vertical: h * 0.015),
+      padding: EdgeInsets.all(w * 0.045),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E2A45),
-        borderRadius: BorderRadius.circular(deviceWidth * 0.04),
-        border: Border.all(color: const Color(0xFF2A3A55), width: 1),
+        color: const Color(0xFF111827),
+        borderRadius: BorderRadius.circular(w * 0.04),
+        border: Border.all(color: const Color(0xFF1E2A3F), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -290,47 +240,32 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'SAVED INTERESTS',
-                style: TextStyle(
-                  color: const Color(0xFF94A3B8),
-                  fontSize: deviceWidth * 0.028,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1,
-                ),
-              ),
-              SizedBox(height: deviceHeight * 0.006),
-              Text(
-                '${_interestedDeals.length} Deals Saved',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: deviceWidth * 0.048,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text('Deals Saved',
+                  style: TextStyle(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: w * 0.033)),
+              SizedBox(height: h * 0.004),
+              Text('${interests.length}',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: w * 0.065,
+                      fontWeight: FontWeight.w800)),
             ],
           ),
+          Container(width: 1, height: h * 0.07, color: const Color(0xFF1E2A3F)),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                'TOTAL POTENTIAL',
-                style: TextStyle(
-                  color: const Color(0xFF94A3B8),
-                  fontSize: deviceWidth * 0.028,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1,
-                ),
-              ),
-              SizedBox(height: deviceHeight * 0.006),
-              Text(
-                '₹1.5Cr',
-                style: TextStyle(
-                  color: const Color(0xFF6366F1),  // updated from #3B82F6
-                  fontSize: deviceWidth * 0.048,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text('Total Potential',
+                  style: TextStyle(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: w * 0.033)),
+              SizedBox(height: h * 0.004),
+              Text(_parseTotalInvestment(interests),
+                  style: TextStyle(
+                      color: const Color(0xFF22C55E),
+                      fontSize: w * 0.055,
+                      fontWeight: FontWeight.w800)),
             ],
           ),
         ],
@@ -338,200 +273,220 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
     );
   }
 
-  Widget _buildInterestCard(
-    Map<String, dynamic> deal,
-    int index,
-    double deviceWidth,
-    double deviceHeight,
-  ) {
-    final Color statusColor = _getStatusColor(deal['status']);
+  Widget _buildEmptyState(double w, double h) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bookmark_border_rounded,
+              color: const Color(0xFF2A3A55), size: w * 0.18),
+          SizedBox(height: h * 0.02),
+          Text('No Interests Yet',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: w * 0.05,
+                  fontWeight: FontWeight.w700)),
+          SizedBox(height: h * 0.008),
+          Text('Browse deals and express your interest',
+              style: TextStyle(
+                  color: const Color(0xFF94A3B8), fontSize: w * 0.036)),
+          SizedBox(height: h * 0.03),
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                  horizontal: w * 0.06, vertical: h * 0.015),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                ),
+                borderRadius: BorderRadius.circular(w * 0.035),
+              ),
+              child: Text('Browse Deals',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: w * 0.04,
+                      fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Interest Card ─────────────────────────────────────────────────────────────
+
+class _InterestCard extends StatelessWidget {
+  final InterestEntity interest;
+  final Color Function(String) getRiskColor;
+  final Color Function(String) getIndustryColor;
+
+  const _InterestCard({
+    required this.interest,
+    required this.getRiskColor,
+    required this.getIndustryColor,
+  });
+
+  DealEntity _toDealEntity() => DealEntity(
+        id: interest.dealId,
+        title: interest.dealTitle,
+        companyName: interest.companyName,
+        industry: interest.industry,
+        investmentRequired: interest.investmentRequired,
+        expectedRoi: interest.expectedRoi,
+        riskLevel: interest.riskLevel,
+        status: interest.status,
+        postedByEmail: interest.postedByEmail,
+        postedByName: interest.postedByName,
+        description: interest.description,
+        createdAt: interest.createdAt,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final double w = MediaQuery.of(context).size.width;
+    final double h = MediaQuery.of(context).size.height;
+    final bool isOpen = interest.status.toLowerCase() == 'open';
+    final Color industryColor = getIndustryColor(interest.industry);
 
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1E2A45),
-        borderRadius: BorderRadius.circular(deviceWidth * 0.045),
+        borderRadius: BorderRadius.circular(w * 0.045),
         border: Border.all(color: const Color(0xFF2A3A55), width: 1),
       ),
       child: Padding(
-        padding: EdgeInsets.all(deviceWidth * 0.045),
+        padding: EdgeInsets.all(w * 0.045),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Company header row
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: deviceWidth * 0.14,
-                  height: deviceWidth * 0.14,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(deviceWidth * 0.03),
-                    color: const Color(0xFF162035),
-                    border: Border.all(
-                      color: const Color(0xFF2A3A55),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    deal['icon'] as IconData,
-                    color: deal['iconColor'] as Color,
-                    size: deviceWidth * 0.07,
-                  ),
-                ),
-                SizedBox(width: deviceWidth * 0.04),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        deal['company'],
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: deviceWidth * 0.048,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: deviceHeight * 0.006),
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: deviceWidth * 0.025,
-                              vertical: deviceHeight * 0.003,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.15),
-                              borderRadius:
-                                  BorderRadius.circular(deviceWidth * 0.015),
-                              border: Border.all(
-                                color: statusColor,
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              deal['status'],
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: deviceWidth * 0.028,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: deviceWidth * 0.02),
-                          Text(
-                            '• ${deal['category']}',
-                            style: TextStyle(
+                      Text(interest.companyName,
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: w * 0.046,
+                              fontWeight: FontWeight.w700)),
+                      SizedBox(height: h * 0.004),
+                      Text(interest.dealTitle,
+                          style: TextStyle(
                               color: const Color(0xFF94A3B8),
-                              fontSize: deviceWidth * 0.032,
-                            ),
-                          ),
-                        ],
-                      ),
+                              fontSize: w * 0.032)),
                     ],
                   ),
                 ),
-              ],
-            ),
-
-            SizedBox(height: deviceHeight * 0.02),
-
-            // Stats row
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatColumn(
-                    label: 'MIN. TICKET',
-                    value: deal['minTicket'],
-                    valueColor: Colors.white,
-                    deviceWidth: deviceWidth,
-                    deviceHeight: deviceHeight,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStatColumn(
-                    label: 'EXP. ROI',
-                    value: deal['roi'],
-                    valueColor: const Color(0xFF22C55E), // green for ROI
-                    deviceWidth: deviceWidth,
-                    deviceHeight: deviceHeight,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStatColumn(
-                    label: 'RISK',
-                    value: deal['risk'],
-                    valueColor: _getRiskColor(deal['risk']),
-                    deviceWidth: deviceWidth,
-                    deviceHeight: deviceHeight,
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: deviceHeight * 0.02),
-
-            // Buttons row
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DealDetailScreen(deal: deal),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      height: deviceHeight * 0.055,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: w * 0.025, vertical: h * 0.004),
                       decoration: BoxDecoration(
-                        borderRadius:
-                            BorderRadius.circular(deviceWidth * 0.03),
+                        color: (isOpen
+                                ? const Color(0xFF22C55E)
+                                : const Color(0xFFEF4444))
+                            .withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(w * 0.015),
                         border: Border.all(
-                          color: const Color(0xFF6366F1), // updated
-                          width: 1.5,
+                          color: isOpen
+                              ? const Color(0xFF22C55E)
+                              : const Color(0xFFEF4444),
+                          width: 1,
                         ),
                       ),
-                      child: Center(
-                        child: Text(
-                          'VIEW DETAILS',
-                          style: TextStyle(
-                            color: const Color(0xFF6366F1), // updated
-                            fontSize: deviceWidth * 0.033,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1,
-                          ),
+                      child: Text(
+                        isOpen ? 'OPEN' : 'CLOSED',
+                        style: TextStyle(
+                          color: isOpen
+                              ? const Color(0xFF22C55E)
+                              : const Color(0xFFEF4444),
+                          fontSize: w * 0.025,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
-                  ),
-                ),
-                SizedBox(width: deviceWidth * 0.03),
-                GestureDetector(
-                  onTap: () => _removeInterest(index),
-                  child: Container(
-                    width: deviceWidth * 0.13,
-                    height: deviceHeight * 0.055,
-                    decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.circular(deviceWidth * 0.03),
-                      border: Border.all(
-                        color: const Color(0xFFEF4444),
-                        width: 1.5,
-                      ),
-                      color: const Color(0xFFEF4444).withOpacity(0.08),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.delete_outline_rounded,
-                        color: const Color(0xFFEF4444),
-                        size: deviceWidth * 0.055,
+                    SizedBox(height: h * 0.006),
+                    GestureDetector(
+                      onTap: () => _confirmRemove(context),
+                      child: Container(
+                        padding: EdgeInsets.all(w * 0.02),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(w * 0.02),
+                          border: Border.all(
+                              color: const Color(0xFFEF4444), width: 1),
+                        ),
+                        child: Icon(Icons.delete_outline_rounded,
+                            color: const Color(0xFFEF4444), size: w * 0.04),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
+            ),
+            SizedBox(height: h * 0.01),
+            Container(
+              padding: EdgeInsets.symmetric(
+                  horizontal: w * 0.03, vertical: h * 0.004),
+              decoration: BoxDecoration(
+                color: industryColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(w * 0.015),
+              ),
+              child: Text(interest.industry.toUpperCase(),
+                  style: TextStyle(
+                      color: industryColor,
+                      fontSize: w * 0.028,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5)),
+            ),
+            SizedBox(height: h * 0.015),
+            const Divider(color: Color(0xFF2A3A55), thickness: 1),
+            SizedBox(height: h * 0.01),
+            _infoRow(Icons.account_balance_wallet_outlined, 'Min Ticket',
+                interest.investmentRequired, Colors.white, w),
+            SizedBox(height: h * 0.008),
+            _infoRow(
+                Icons.trending_up_rounded,
+                'Expected ROI',
+                '${interest.expectedRoi.toStringAsFixed(1)}%',
+                const Color(0xFF22C55E),
+                w),
+            SizedBox(height: h * 0.008),
+            _infoRow(Icons.warning_amber_rounded, 'Risk Level',
+                interest.riskLevel, getRiskColor(interest.riskLevel), w),
+            SizedBox(height: h * 0.018),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DealDetailScreen(
+                    deal: _toDealEntity(),
+                    investorEmail: interest.investorEmail,
+                  ),
+                ),
+              ),
+              child: Container(
+                width: double.infinity,
+                height: h * 0.055,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(w * 0.03),
+                  border:
+                      Border.all(color: const Color(0xFF6366F1), width: 1.5),
+                ),
+                child: Center(
+                  child: Text('VIEW DETAILS',
+                      style: TextStyle(
+                          color: const Color(0xFF6366F1),
+                          fontSize: w * 0.035,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5)),
+                ),
+              ),
             ),
           ],
         ),
@@ -539,89 +494,67 @@ class _MyInterestsScreenState extends State<MyInterestsScreen>
     );
   }
 
-  Widget _buildStatColumn({
-    required String label,
-    required String value,
-    required Color valueColor,
-    required double deviceWidth,
-    required double deviceHeight,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _infoRow(IconData icon, String label, String value,
+      Color valueColor, double w) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: const Color(0xFF94A3B8),
-            fontSize: deviceWidth * 0.027,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
+        Row(
+          children: [
+            Icon(icon, color: const Color(0xFF94A3B8), size: w * 0.042),
+            SizedBox(width: w * 0.022),
+            Text(label,
+                style: TextStyle(
+                    color: const Color(0xFF94A3B8), fontSize: w * 0.034)),
+          ],
         ),
-        SizedBox(height: deviceHeight * 0.005),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontSize: deviceWidth * 0.044,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        Text(value,
+            style: TextStyle(
+                color: valueColor,
+                fontSize: w * 0.036,
+                fontWeight: FontWeight.w700)),
       ],
     );
   }
 
-  Widget _buildEmptyState(double deviceWidth, double deviceHeight) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.bookmark_border_rounded,
-            color: const Color(0xFF2A3A55),
-            size: deviceWidth * 0.2,
+  void _confirmRemove(BuildContext context) {
+    final double w = MediaQuery.of(context).size.width;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF111827),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(w * 0.04)),
+        title: const Text('Remove Interest',
+            style:
+                TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        content: Text(
+            'Are you sure you want to remove your interest in ${interest.companyName}?',
+            style: const TextStyle(color: Color(0xFF94A3B8))),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel',
+                style: TextStyle(color: Color(0xFF94A3B8))),
           ),
-          SizedBox(height: deviceHeight * 0.025),
-          Text(
-            'No Interests Yet',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: deviceWidth * 0.055,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: deviceHeight * 0.01),
-          Text(
-            'Start exploring deals and\nmark your interests',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: const Color(0xFF94A3B8),
-              fontSize: deviceWidth * 0.038,
-              height: 1.5,
-            ),
-          ),
-          SizedBox(height: deviceHeight * 0.04),
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pop(context);
+              context.read<InterestBloc>().add(RemoveInterestEvent(
+                    dealId: interest.dealId,
+                    investorEmail: interest.investorEmail,
+                  ));
+            },
             child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: deviceWidth * 0.08,
-                vertical: deviceHeight * 0.018,
-              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(deviceWidth * 0.04),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)], // updated
-                ),
+                color: const Color(0xFFEF4444),
+                borderRadius: BorderRadius.circular(w * 0.02),
               ),
-              child: Text(
-                'Browse Deals',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: deviceWidth * 0.042,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              child: const Text('Remove',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700)),
             ),
           ),
         ],

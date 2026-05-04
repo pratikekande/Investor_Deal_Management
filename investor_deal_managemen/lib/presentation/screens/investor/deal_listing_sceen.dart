@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:investor_deal_managemen/domain/entities/deal_entity.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/auth/auth_state.dart';
+import 'package:investor_deal_managemen/presentation/bloc/deal/deal_bloc.dart';
+import 'package:investor_deal_managemen/presentation/bloc/deal/deal_event.dart';
+import 'package:investor_deal_managemen/presentation/bloc/deal/deal_state.dart';
 import 'package:investor_deal_managemen/presentation/screens/investor/deal_detail_screen.dart';
-import 'package:investor_deal_managemen/presentation/widgets/filter_bottom_sheet.dart';
 
 class DealListingScreen extends StatefulWidget {
   const DealListingScreen({super.key});
@@ -12,94 +18,19 @@ class DealListingScreen extends StatefulWidget {
 class _DealListingScreenState extends State<DealListingScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  String? _selectedIndustry;
-  String? _selectedRisk;
-  String? _selectedStatus;
-  RangeValues _roiRange = const RangeValues(0, 30);
+  bool _hasActiveFilters = false;
+  int _activeFilterCount = 0;
 
-  final List<Map<String, dynamic>> _deals = [
-    {
-      'company': 'CloudScale AI',
-      'industry': 'TECH',
-      'investment': '₹50,00,000',
-      'roi': 18.0,
-      'risk': 'Medium',
-      'status': 'OPEN',
-    },
-    {
-      'company': 'HealthGen',
-      'industry': 'HEALTHCARE',
-      'investment': '₹75,00,000',
-      'roi': 22.0,
-      'risk': 'Medium',
-      'status': 'OPEN',
-    },
-    {
-      'company': 'FinTech Pro',
-      'industry': 'FINANCE',
-      'investment': '₹30,00,000',
-      'roi': 14.0,
-      'risk': 'Low',
-      'status': 'OPEN',
-    },
-    {
-      'company': 'SolarEdge Power',
-      'industry': 'ENERGY',
-      'investment': '₹1,20,00,000',
-      'roi': 25.0,
-      'risk': 'High',
-      'status': 'OPEN',
-    },
-    {
-      'company': 'MetroRealty',
-      'industry': 'REAL ESTATE',
-      'investment': '₹2,00,00,000',
-      'roi': 12.0,
-      'risk': 'Low',
-      'status': 'CLOSED',
-    },
-  ];
-
-  bool get _hasActiveFilters =>
-      _selectedIndustry != null ||
-      _selectedRisk != null ||
-      _selectedStatus != null ||
-      _roiRange.start != 0 ||
-      _roiRange.end != 30;
-
-  int get _activeFilterCount {
-    int count = 0;
-    if (_selectedIndustry != null) count++;
-    if (_selectedRisk != null) count++;
-    if (_selectedStatus != null) count++;
-    if (_roiRange.start != 0 || _roiRange.end != 30) count++;
-    return count;
+  @override
+  void initState() {
+    super.initState();
+    context.read<DealBloc>().add(LoadAllDealsEvent());
   }
 
-  List<Map<String, dynamic>> get _filteredDeals {
-    return _deals.where((deal) {
-      final matchesIndustry = _selectedIndustry == null ||
-          deal['industry'].toString().toUpperCase() ==
-              _selectedIndustry!.toUpperCase();
-      final matchesRisk = _selectedRisk == null ||
-          deal['risk'].toString().toLowerCase() ==
-              _selectedRisk!.toLowerCase();
-      final matchesStatus = _selectedStatus == null ||
-          deal['status'].toString().toLowerCase() ==
-              _selectedStatus!.toLowerCase();
-      final double roi = deal['roi'] as double;
-      final matchesRoi = roi >= _roiRange.start && roi <= _roiRange.end;
-      final matchesSearch = _searchController.text.isEmpty ||
-          deal['company']
-              .toString()
-              .toLowerCase()
-              .contains(_searchController.text.toLowerCase());
-      return matchesIndustry &&
-          matchesRisk &&
-          matchesStatus &&
-          matchesRoi &&
-          matchesSearch;
-    }).toList();
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Color _getRiskColor(String risk) {
@@ -117,6 +48,7 @@ class _DealListingScreenState extends State<DealListingScreen> {
 
   Color _getIndustryColor(String industry) {
     switch (industry.toLowerCase()) {
+      case 'technology':
       case 'tech':
         return const Color(0xFF6366F1);
       case 'healthcare':
@@ -127,59 +59,53 @@ class _DealListingScreenState extends State<DealListingScreen> {
         return const Color(0xFFF59E0B);
       case 'real estate':
         return const Color(0xFF22C55E);
+      case 'manufacturing':
+        return const Color(0xFFF97316);
+      case 'retail':
+        return const Color(0xFFEC4899);
+      case 'agriculture':
+        return const Color(0xFF84CC16);
       default:
         return const Color(0xFF6366F1);
     }
   }
 
-  Future<void> _openFilterSheet() async {
-    final result = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => FilterBottomSheet(
-        initialIndustry: _selectedIndustry,
-        initialRisk: _selectedRisk,
-        initialStatus: _selectedStatus,
-        initialRoiMin: _roiRange.start,
-        initialRoiMax: _roiRange.end,
-      ),
-    );
-    if (result != null) {
+  void _updateFilterState({required bool hasFilters, required int count}) {
+    if (mounted) {
       setState(() {
-        _selectedIndustry =
-            result['industry'] == 'All' ? null : result['industry'];
-        _selectedRisk = result['risk'];
-        _selectedStatus = result['status'];
-        _roiRange = RangeValues(result['roiMin'], result['roiMax']);
+        _hasActiveFilters = hasFilters;
+        _activeFilterCount = count;
       });
     }
   }
 
-  void _clearAllFilters() {
-    setState(() {
-      _selectedIndustry = null;
-      _selectedRisk = null;
-      _selectedStatus = null;
-      _roiRange = const RangeValues(0, 30);
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void _openFilterSheet(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: ctx.read<DealBloc>(),
+        child: _FilterBottomSheet(onFiltersChanged: _updateFilterState),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final double deviceWidth = MediaQuery.of(context).size.width;
-    final double deviceHeight = MediaQuery.of(context).size.height;
+    final double w = MediaQuery.of(context).size.width;
+    final double h = MediaQuery.of(context).size.height;
+
+    String userName = 'Investor';
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      userName = authState.user.name;
+    }
 
     return Scaffold(
       body: Container(
-        width: deviceWidth,
-        height: deviceHeight,
+        width: w,
+        height: h,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -194,33 +120,28 @@ class _DealListingScreenState extends State<DealListingScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              _buildAppBar(deviceWidth, deviceHeight),
+              _buildAppBar(w, h, userName),
               Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: deviceWidth * 0.05,
-                  vertical: deviceHeight * 0.012,
-                ),
-                child: _buildSearchBar(deviceWidth, deviceHeight),
+                    horizontal: w * 0.05, vertical: h * 0.012),
+                child: _buildSearchBar(w, h),
               ),
               Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: deviceWidth * 0.05),
+                padding: EdgeInsets.symmetric(horizontal: w * 0.05),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: _openFilterSheet,
+                      onTap: () => _openFilterSheet(context),
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: deviceWidth * 0.04,
-                          vertical: deviceHeight * 0.009,
-                        ),
+                            horizontal: w * 0.04, vertical: h * 0.009),
                         decoration: BoxDecoration(
                           color: _hasActiveFilters
                               ? const Color(0xFF6366F1).withOpacity(0.15)
                               : Colors.transparent,
                           borderRadius:
-                              BorderRadius.circular(deviceWidth * 0.025),
+                              BorderRadius.circular(w * 0.025),
                           border: Border.all(
                             color: _hasActiveFilters
                                 ? const Color(0xFF6366F1)
@@ -230,40 +151,34 @@ class _DealListingScreenState extends State<DealListingScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.tune_rounded,
-                              color: _hasActiveFilters
-                                  ? const Color(0xFF6366F1)
-                                  : const Color(0xFF94A3B8),
-                              size: deviceWidth * 0.045,
-                            ),
-                            SizedBox(width: deviceWidth * 0.02),
-                            Text(
-                              'Filters',
-                              style: TextStyle(
+                            Icon(Icons.tune_rounded,
                                 color: _hasActiveFilters
                                     ? const Color(0xFF6366F1)
                                     : const Color(0xFF94A3B8),
-                                fontSize: deviceWidth * 0.038,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                                size: w * 0.045),
+                            SizedBox(width: w * 0.02),
+                            Text('Filters',
+                                style: TextStyle(
+                                  color: _hasActiveFilters
+                                      ? const Color(0xFF6366F1)
+                                      : const Color(0xFF94A3B8),
+                                  fontSize: w * 0.038,
+                                  fontWeight: FontWeight.w600,
+                                )),
                             if (_hasActiveFilters) ...[
-                              SizedBox(width: deviceWidth * 0.02),
+                              SizedBox(width: w * 0.02),
                               Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF6366F1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Text(
-                                  '$_activeFilterCount',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: deviceWidth * 0.028,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                                child: Text('$_activeFilterCount',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: w * 0.028,
+                                      fontWeight: FontWeight.w700,
+                                    )),
                               ),
                             ],
                           ],
@@ -272,43 +187,68 @@ class _DealListingScreenState extends State<DealListingScreen> {
                     ),
                     if (_hasActiveFilters)
                       GestureDetector(
-                        onTap: _clearAllFilters,
+                        onTap: () {
+                          context.read<DealBloc>().add(ClearFiltersEvent());
+                          _updateFilterState(hasFilters: false, count: 0);
+                        },
                         child: Padding(
-                          padding:
-                              EdgeInsets.only(right: deviceWidth * 0.03),
-                          child: Text(
-                            'Clear all',
-                            style: TextStyle(
-                              color: const Color(0xFFEF4444),
-                              fontSize: deviceWidth * 0.032,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                          padding: EdgeInsets.only(right: w * 0.03),
+                          child: Text('Clear all',
+                              style: TextStyle(
+                                color: const Color(0xFFEF4444),
+                                fontSize: w * 0.032,
+                                fontWeight: FontWeight.w500,
+                              )),
                         ),
                       ),
                   ],
                 ),
               ),
-              SizedBox(height: deviceHeight * 0.015),
+              SizedBox(height: h * 0.015),
               Expanded(
-                child: _filteredDeals.isEmpty
-                    ? _buildEmptyState(deviceWidth, deviceHeight)
-                    : ListView.builder(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: deviceWidth * 0.05),
-                        itemCount: _filteredDeals.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: EdgeInsets.only(
-                                bottom: deviceHeight * 0.018),
-                            child: _buildDealCard(
-                              _filteredDeals[index],
-                              deviceWidth,
-                              deviceHeight,
-                            ),
-                          );
-                        },
-                      ),
+                child: BlocBuilder<DealBloc, DealState>(
+                  builder: (ctx, state) {
+                    if (state is DealLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                            color: Color(0xFF6366F1)),
+                      );
+                    }
+                    if (state is DealError) {
+                      return Center(
+                        child: Text(state.message,
+                            style: const TextStyle(
+                                color: Color(0xFFEF4444))),
+                      );
+                    }
+                    if (state is DealsLoaded) {
+                      if (state.filteredDeals.isEmpty) {
+                        return _buildEmptyState(w, h);
+                      }
+                      final String investorEmail =
+                          (context.read<AuthBloc>().state
+                                  as AuthAuthenticated)
+                              .user
+                              .email;
+                      return ListView.builder(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: w * 0.05),
+                        itemCount: state.filteredDeals.length,
+                        itemBuilder: (_, i) => Padding(
+                          padding:
+                              EdgeInsets.only(bottom: h * 0.018),
+                          child: _DealCard(
+                            deal: state.filteredDeals[i],
+                            currentInvestorEmail: investorEmail,
+                            getRiskColor: _getRiskColor,
+                            getIndustryColor: _getIndustryColor,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
               ),
             ],
           ),
@@ -317,15 +257,12 @@ class _DealListingScreenState extends State<DealListingScreen> {
     );
   }
 
-  // ── AppBar (matches My Interests style) ─────────────────────────────────────
-  Widget _buildAppBar(double deviceWidth, double deviceHeight) {
+  Widget _buildAppBar(double w, double h, String userName) {
     return Column(
       children: [
         Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: deviceWidth * 0.05,
-            vertical: deviceHeight * 0.018,
-          ),
+              horizontal: w * 0.05, vertical: h * 0.018),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -334,30 +271,22 @@ class _DealListingScreenState extends State<DealListingScreen> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        'Hello, Investor',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: deviceWidth * 0.055,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(width: deviceWidth * 0.015),
-                      Text(
-                        '👋',
-                        style: TextStyle(fontSize: deviceWidth * 0.052),
-                      ),
+                      Text('Hello, $userName',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: w * 0.055,
+                              fontWeight: FontWeight.w700)),
+                      SizedBox(width: w * 0.015),
+                      Text('👋',
+                          style: TextStyle(fontSize: w * 0.052)),
                     ],
                   ),
-                  SizedBox(height: deviceHeight * 0.004),
-                  Text(
-                    'Find your next deal',
-                    style: TextStyle(
-                      color: const Color(0xFF94A3B8),
-                      fontSize: deviceWidth * 0.032,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
+                  SizedBox(height: h * 0.004),
+                  Text('Find your next deal',
+                      style: TextStyle(
+                          color: const Color(0xFF94A3B8),
+                          fontSize: w * 0.032,
+                          fontWeight: FontWeight.w400)),
                 ],
               ),
             ],
@@ -368,37 +297,30 @@ class _DealListingScreenState extends State<DealListingScreen> {
     );
   }
 
-  Widget _buildSearchBar(double deviceWidth, double deviceHeight) {
+  Widget _buildSearchBar(double w, double h) {
     return Container(
-      height: deviceHeight * 0.065,
+      height: h * 0.065,
       decoration: BoxDecoration(
         color: const Color(0xFF1E2A45),
-        borderRadius: BorderRadius.circular(deviceWidth * 0.04),
+        borderRadius: BorderRadius.circular(w * 0.04),
         border: Border.all(color: const Color(0xFF2A3A55), width: 1),
       ),
       child: Row(
         children: [
-          SizedBox(width: deviceWidth * 0.04),
-          Icon(
-            Icons.search_rounded,
-            color: const Color(0xFF94A3B8),
-            size: deviceWidth * 0.055,
-          ),
-          SizedBox(width: deviceWidth * 0.03),
+          SizedBox(width: w * 0.04),
+          Icon(Icons.search_rounded,
+              color: const Color(0xFF94A3B8), size: w * 0.055),
+          SizedBox(width: w * 0.03),
           Expanded(
             child: TextField(
               controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: deviceWidth * 0.038,
-              ),
+              onChanged: (q) =>
+                  context.read<DealBloc>().add(SearchDealsEvent(q)),
+              style: TextStyle(color: Colors.white, fontSize: w * 0.038),
               decoration: InputDecoration(
-                hintText: 'Search by company name...',
+                hintText: 'Search by company or deal title...',
                 hintStyle: TextStyle(
-                  color: const Color(0xFF94A3B8),
-                  fontSize: deviceWidth * 0.038,
-                ),
+                    color: const Color(0xFF94A3B8), fontSize: w * 0.038),
                 border: InputBorder.none,
                 isDense: true,
               ),
@@ -408,15 +330,13 @@ class _DealListingScreenState extends State<DealListingScreen> {
             GestureDetector(
               onTap: () {
                 _searchController.clear();
+                context.read<DealBloc>().add(SearchDealsEvent(''));
                 setState(() {});
               },
               child: Padding(
-                padding: EdgeInsets.only(right: deviceWidth * 0.03),
-                child: Icon(
-                  Icons.close_rounded,
-                  color: const Color(0xFF94A3B8),
-                  size: deviceWidth * 0.045,
-                ),
+                padding: EdgeInsets.only(right: w * 0.03),
+                child: Icon(Icons.close_rounded,
+                    color: const Color(0xFF94A3B8), size: w * 0.045),
               ),
             ),
         ],
@@ -424,46 +344,83 @@ class _DealListingScreenState extends State<DealListingScreen> {
     );
   }
 
-  Widget _buildDealCard(
-    Map<String, dynamic> deal,
-    double deviceWidth,
-    double deviceHeight,
-  ) {
-    final bool isOpen = deal['status'] == 'OPEN';
-    final Color industryColor = _getIndustryColor(deal['industry']);
+  Widget _buildEmptyState(double w, double h) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded,
+              color: const Color(0xFF2A3A55), size: w * 0.18),
+          SizedBox(height: h * 0.02),
+          Text('No Deals Found',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: w * 0.05,
+                  fontWeight: FontWeight.w700)),
+          SizedBox(height: h * 0.008),
+          Text('Try adjusting your search or filters',
+              style: TextStyle(
+                  color: const Color(0xFF94A3B8), fontSize: w * 0.036)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Deal Card ─────────────────────────────────────────────────────────────────
+
+class _DealCard extends StatelessWidget {
+  final DealEntity deal;
+  final String currentInvestorEmail;
+  final Color Function(String) getRiskColor;
+  final Color Function(String) getIndustryColor;
+
+  const _DealCard({
+    required this.deal,
+    required this.currentInvestorEmail,
+    required this.getRiskColor,
+    required this.getIndustryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double w = MediaQuery.of(context).size.width;
+    final double h = MediaQuery.of(context).size.height;
+    final bool isOpen =
+        deal.status.toLowerCase() == 'open';
+    final Color industryColor = getIndustryColor(deal.industry);
 
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1E2A45),
-        borderRadius: BorderRadius.circular(deviceWidth * 0.045),
+        borderRadius: BorderRadius.circular(w * 0.045),
         border: Border.all(color: const Color(0xFF2A3A55), width: 1),
       ),
       child: Padding(
-        padding: EdgeInsets.all(deviceWidth * 0.045),
+        padding: EdgeInsets.all(w * 0.045),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  deal['company'],
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: deviceWidth * 0.048,
-                    fontWeight: FontWeight.w700,
-                  ),
+                Expanded(
+                  child: Text(deal.companyName,
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w * 0.048,
+                          fontWeight: FontWeight.w700)),
                 ),
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: deviceWidth * 0.03,
-                    vertical: deviceHeight * 0.005,
-                  ),
+                      horizontal: w * 0.03, vertical: h * 0.005),
                   decoration: BoxDecoration(
-                    color: isOpen
-                        ? const Color(0xFF22C55E).withOpacity(0.15)
-                        : const Color(0xFFEF4444).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(deviceWidth * 0.02),
+                    color: (isOpen
+                            ? const Color(0xFF22C55E)
+                            : const Color(0xFFEF4444))
+                        .withOpacity(0.15),
+                    borderRadius:
+                        BorderRadius.circular(w * 0.02),
                     border: Border.all(
                       color: isOpen
                           ? const Color(0xFF22C55E)
@@ -472,12 +429,12 @@ class _DealListingScreenState extends State<DealListingScreen> {
                     ),
                   ),
                   child: Text(
-                    deal['status'],
+                    isOpen ? 'OPEN' : 'CLOSED',
                     style: TextStyle(
                       color: isOpen
                           ? const Color(0xFF22C55E)
                           : const Color(0xFFEF4444),
-                      fontSize: deviceWidth * 0.028,
+                      fontSize: w * 0.028,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
                     ),
@@ -485,85 +442,65 @@ class _DealListingScreenState extends State<DealListingScreen> {
                 ),
               ],
             ),
-            SizedBox(height: deviceHeight * 0.008),
+            SizedBox(height: h * 0.006),
+            Text(deal.title,
+                style: TextStyle(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: w * 0.033)),
+            SizedBox(height: h * 0.008),
             Container(
               padding: EdgeInsets.symmetric(
-                horizontal: deviceWidth * 0.03,
-                vertical: deviceHeight * 0.004,
-              ),
+                  horizontal: w * 0.03, vertical: h * 0.004),
               decoration: BoxDecoration(
                 color: industryColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(deviceWidth * 0.015),
+                borderRadius:
+                    BorderRadius.circular(w * 0.015),
               ),
-              child: Text(
-                deal['industry'],
-                style: TextStyle(
-                  color: industryColor,
-                  fontSize: deviceWidth * 0.028,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
+              child: Text(deal.industry.toUpperCase(),
+                  style: TextStyle(
+                      color: industryColor,
+                      fontSize: w * 0.028,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5)),
+            ),
+            SizedBox(height: h * 0.015),
+            const Divider(color: Color(0xFF2A3A55), thickness: 1),
+            SizedBox(height: h * 0.012),
+            _infoRow(Icons.account_balance_wallet_outlined,
+                'Investment Required', deal.investmentRequired, Colors.white, w),
+            SizedBox(height: h * 0.01),
+            _infoRow(Icons.trending_up_rounded, 'Expected ROI',
+                '${deal.expectedRoi.toStringAsFixed(1)}%',
+                const Color(0xFF22C55E), w),
+            SizedBox(height: h * 0.01),
+            _infoRow(Icons.warning_amber_rounded, 'Risk Level',
+                deal.riskLevel, getRiskColor(deal.riskLevel), w),
+            SizedBox(height: h * 0.018),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DealDetailScreen(
+                      deal: deal,
+                      investorEmail: currentInvestorEmail),
                 ),
               ),
-            ),
-            SizedBox(height: deviceHeight * 0.015),
-            const Divider(color: Color(0xFF2A3A55), thickness: 1),
-            SizedBox(height: deviceHeight * 0.012),
-            _buildInfoRow(
-              icon: Icons.account_balance_wallet_outlined,
-              label: 'Investment Required',
-              value: deal['investment'],
-              valueColor: Colors.white,
-              deviceWidth: deviceWidth,
-              deviceHeight: deviceHeight,
-            ),
-            SizedBox(height: deviceHeight * 0.01),
-            _buildInfoRow(
-              icon: Icons.trending_up_rounded,
-              label: 'Expected ROI',
-              value: '${deal['roi'].round()}%',
-              valueColor: const Color(0xFF22C55E),
-              deviceWidth: deviceWidth,
-              deviceHeight: deviceHeight,
-            ),
-            SizedBox(height: deviceHeight * 0.01),
-            _buildInfoRow(
-              icon: Icons.warning_amber_rounded,
-              label: 'Risk Level',
-              value: deal['risk'],
-              valueColor: _getRiskColor(deal['risk']),
-              deviceWidth: deviceWidth,
-              deviceHeight: deviceHeight,
-            ),
-            SizedBox(height: deviceHeight * 0.018),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DealDetailScreen(deal: deal),
-                  ),
-                );
-              },
               child: Container(
                 width: double.infinity,
-                height: deviceHeight * 0.055,
+                height: h * 0.055,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(deviceWidth * 0.03),
+                  borderRadius:
+                      BorderRadius.circular(w * 0.03),
                   border: Border.all(
-                    color: const Color(0xFF6366F1),
-                    width: 1.5,
-                  ),
+                      color: const Color(0xFF6366F1), width: 1.5),
                 ),
                 child: Center(
-                  child: Text(
-                    'VIEW DETAILS',
-                    style: TextStyle(
-                      color: const Color(0xFF6366F1),
-                      fontSize: deviceWidth * 0.035,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
+                  child: Text('VIEW DETAILS',
+                      style: TextStyle(
+                          color: const Color(0xFF6366F1),
+                          fontSize: w * 0.035,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5)),
                 ),
               ),
             ),
@@ -573,72 +510,284 @@ class _DealListingScreenState extends State<DealListingScreen> {
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color valueColor,
-    required double deviceWidth,
-    required double deviceHeight,
-  }) {
+  Widget _infoRow(IconData icon, String label, String value, Color valueColor,
+      double w) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            Icon(icon, color: const Color(0xFF94A3B8), size: deviceWidth * 0.045),
-            SizedBox(width: deviceWidth * 0.025),
-            Text(
-              label,
-              style: TextStyle(
-                color: const Color(0xFF94A3B8),
-                fontSize: deviceWidth * 0.036,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
+            Icon(icon, color: const Color(0xFF94A3B8), size: w * 0.045),
+            SizedBox(width: w * 0.025),
+            Text(label,
+                style: TextStyle(
+                    color: const Color(0xFF94A3B8), fontSize: w * 0.036)),
           ],
         ),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontSize: deviceWidth * 0.038,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        Text(value,
+            style: TextStyle(
+                color: valueColor,
+                fontSize: w * 0.038,
+                fontWeight: FontWeight.w700)),
       ],
     );
   }
+}
 
-  Widget _buildEmptyState(double deviceWidth, double deviceHeight) {
-    return Center(
+// ── Filter Bottom Sheet ───────────────────────────────────────────────────────
+
+class _FilterBottomSheet extends StatefulWidget {
+  final void Function({required bool hasFilters, required int count}) onFiltersChanged;
+  const _FilterBottomSheet({required this.onFiltersChanged});
+
+  @override
+  State<_FilterBottomSheet> createState() => _FilterBottomSheetState();
+}
+
+class _FilterBottomSheetState extends State<_FilterBottomSheet> {
+  String _industry = 'All';
+  String _risk = 'All';
+  String _status = 'All';
+  RangeValues _roiRange = const RangeValues(0, 100);
+
+  @override
+  Widget build(BuildContext context) {
+    final double w = MediaQuery.of(context).size.width;
+    final double h = MediaQuery.of(context).size.height;
+
+    return Container(
+      height: h * 0.75,
+      decoration: const BoxDecoration(
+        color: Color(0xFF111827),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off_rounded,
-            color: const Color(0xFF2A3A55),
-            size: deviceWidth * 0.18,
-          ),
-          SizedBox(height: deviceHeight * 0.02),
-          Text(
-            'No Deals Found',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: deviceWidth * 0.05,
-              fontWeight: FontWeight.w700,
+          Padding(
+            padding: EdgeInsets.all(w * 0.05),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Filter Deals',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: w * 0.048,
+                        fontWeight: FontWeight.w700)),
+                TextButton(
+                  onPressed: () {
+                    context.read<DealBloc>().add(ClearFiltersEvent());
+                    widget.onFiltersChanged(hasFilters: false, count: 0);
+                    Navigator.pop(context);
+                  },
+                  child: Text('Reset',
+                      style: TextStyle(
+                          color: const Color(0xFF6366F1), fontSize: w * 0.038)),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: deviceHeight * 0.008),
-          Text(
-            'Try adjusting your search or filters',
-            style: TextStyle(
-              color: const Color(0xFF94A3B8),
-              fontSize: deviceWidth * 0.036,
+          const Divider(color: Color(0xFF1E2A3F), thickness: 1, height: 1),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(w * 0.05),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _label('Industry', w),
+                  SizedBox(height: h * 0.01),
+                  DropdownButtonFormField<String>(
+                    value: _industry,
+                    dropdownColor: const Color(0xFF1E2A45),
+                    style: TextStyle(
+                        color: Colors.white, fontSize: w * 0.038),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFF1E2A45),
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(w * 0.03),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF2A3A55)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(w * 0.03),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF2A3A55)),
+                      ),
+                    ),
+                    items: [
+                      'All',
+                      'Technology',
+                      'Healthcare',
+                      'Finance',
+                      'Energy',
+                      'Real Estate',
+                      'Manufacturing',
+                      'Retail',
+                      'Agriculture'
+                    ]
+                        .map((s) => DropdownMenuItem(
+                            value: s, child: Text(s)))
+                        .toList(),
+                    onChanged: (v) =>
+                        setState(() => _industry = v ?? 'All'),
+                  ),
+                  SizedBox(height: h * 0.02),
+                  _label('Risk Level', w),
+                  SizedBox(height: h * 0.01),
+                  Row(
+                    children: ['All', 'Low', 'Medium', 'High']
+                        .map((r) => Padding(
+                              padding: EdgeInsets.only(right: w * 0.02),
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _risk = r),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: w * 0.04,
+                                      vertical: h * 0.009),
+                                  decoration: BoxDecoration(
+                                    color: _risk == r
+                                        ? const Color(0xFF6366F1)
+                                        : const Color(0xFF1E2A45),
+                                    borderRadius:
+                                        BorderRadius.circular(w * 0.02),
+                                    border: Border.all(
+                                        color: _risk == r
+                                            ? const Color(0xFF6366F1)
+                                            : const Color(0xFF2A3A55)),
+                                  ),
+                                  child: Text(r,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: w * 0.035,
+                                          fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                  SizedBox(height: h * 0.02),
+                  _label('Status', w),
+                  SizedBox(height: h * 0.01),
+                  Row(
+                    children: ['All', 'Open', 'Closed']
+                        .map((s) => Padding(
+                              padding: EdgeInsets.only(right: w * 0.02),
+                              child: GestureDetector(
+                                onTap: () =>
+                                    setState(() => _status = s),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: w * 0.04,
+                                      vertical: h * 0.009),
+                                  decoration: BoxDecoration(
+                                    color: _status == s
+                                        ? const Color(0xFF6366F1)
+                                        : const Color(0xFF1E2A45),
+                                    borderRadius:
+                                        BorderRadius.circular(w * 0.02),
+                                    border: Border.all(
+                                        color: _status == s
+                                            ? const Color(0xFF6366F1)
+                                            : const Color(0xFF2A3A55)),
+                                  ),
+                                  child: Text(s,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: w * 0.035,
+                                          fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                  SizedBox(height: h * 0.02),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _label('ROI Range', w),
+                      Text(
+                          '${_roiRange.start.round()}% – ${_roiRange.end.round()}%',
+                          style: TextStyle(
+                              color: const Color(0xFF6366F1),
+                              fontSize: w * 0.036,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  RangeSlider(
+                    values: _roiRange,
+                    min: 0,
+                    max: 100,
+                    divisions: 20,
+                    activeColor: const Color(0xFF6366F1),
+                    inactiveColor: const Color(0xFF2A3A55),
+                    onChanged: (v) =>
+                        setState(() => _roiRange = v),
+                  ),
+                  SizedBox(height: h * 0.03),
+                  GestureDetector(
+                    onTap: () {
+                      final int count = [_industry == 'All' ? 0 : 1,
+                        _risk == 'All' ? 0 : 1,
+                        _status == 'All' ? 0 : 1,
+                        (_roiRange.start > 0 || _roiRange.end < 100) ? 1 : 0
+                      ].fold(0, (a, b) => a + b);
+                      context.read<DealBloc>().add(FilterDealsEvent(
+                        industry: _industry == 'All' ? null : _industry,
+                        riskLevel: _risk == 'All' ? null : _risk,
+                        status: _status == 'All' ? null : _status,
+                        roiMin: _roiRange.start,
+                        roiMax: _roiRange.end,
+                      ));
+                      widget.onFiltersChanged(hasFilters: count > 0, count: count);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: h * 0.065,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                        ),
+                        borderRadius:
+                            BorderRadius.circular(w * 0.04),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF6366F1)
+                                .withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text('Apply Filters',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: w * 0.042,
+                                fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _label(String text, double w) {
+    return Text(text,
+        style: TextStyle(
+            color: Colors.white,
+            fontSize: w * 0.04,
+            fontWeight: FontWeight.w600));
   }
 }
