@@ -295,7 +295,7 @@ flutter run
 
 ## 🧪 Test Credentials
 
-You can register directly in the app, or use these accounts if pre-seeded:
+You can register directly in the app.
 
 > Accounts are stored locally in SQLite — register once and the session persists.
 
