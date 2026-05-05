@@ -20,12 +20,25 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadInterests();
+  }
+
+  void _loadInterests() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
       context
           .read<InterestBloc>()
           .add(LoadMyInterestsEvent(authState.user.email));
     }
+  }
+
+  // FIX 3: Pull-to-refresh handler.
+  Future<void> _onRefresh() async {
+    _loadInterests();
+    await Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 100));
+      return context.read<InterestBloc>().state is InterestLoading;
+    }).timeout(const Duration(seconds: 10), onTimeout: () {});
   }
 
   Color _getRiskColor(String risk) {
@@ -80,7 +93,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
     }
   }
 
-  /// Extracts the interest list from any state that carries it.
   List<InterestEntity>? _listFromState(InterestState state) {
     if (state is InterestsLoaded) return state.interests;
     if (state is InterestChecked) return state.currentInterests;
@@ -156,7 +168,7 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
                 padding: EdgeInsets.symmetric(
                     horizontal: w * 0.03, vertical: h * 0.006),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.2),
+                  color: const Color(0x336366F1),
                   borderRadius: BorderRadius.circular(w * 0.025),
                   border:
                       Border.all(color: const Color(0xFF6366F1), width: 1),
@@ -177,28 +189,33 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
 
   Widget _buildBody(BuildContext ctx, InterestState state,
       List<InterestEntity> list, double w, double h) {
-    // Show spinner only on the very first load (list is empty and truly loading)
     if (state is InterestLoading && list.isEmpty) {
       return const Center(
           child: CircularProgressIndicator(color: Color(0xFF6366F1)));
     }
 
-    // If we have a list (from any state), render it
     if (list.isNotEmpty) {
       return Column(
         children: [
           _buildSummaryCard(list, w, h),
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                  horizontal: w * 0.05, vertical: h * 0.01),
-              itemCount: list.length,
-              itemBuilder: (_, i) => Padding(
-                padding: EdgeInsets.only(bottom: h * 0.018),
-                child: _InterestCard(
-                  interest: list[i],
-                  getRiskColor: _getRiskColor,
-                  getIndustryColor: _getIndustryColor,
+            // FIX 3: RefreshIndicator wraps the interests ListView.
+            child: RefreshIndicator(
+              onRefresh: _onRefresh,
+              color: const Color(0xFF6366F1),
+              backgroundColor: const Color(0xFF1E2A45),
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                    horizontal: w * 0.05, vertical: h * 0.01),
+                itemCount: list.length,
+                itemBuilder: (_, i) => Padding(
+                  padding: EdgeInsets.only(bottom: h * 0.018),
+                  child: _InterestCard(
+                    interest: list[i],
+                    getRiskColor: _getRiskColor,
+                    getIndustryColor: _getIndustryColor,
+                  ),
                 ),
               ),
             ),
@@ -207,11 +224,22 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
       );
     }
 
-    // Empty state — only shown when list is genuinely empty
     if (state is InterestsLoaded ||
         state is InterestChecked ||
         state is InterestOperationSuccess) {
-      return _buildEmptyState(w, h);
+      // FIX 3: Empty state also supports pull-to-refresh.
+      return RefreshIndicator(
+        onRefresh: _onRefresh,
+        color: const Color(0xFF6366F1),
+        backgroundColor: const Color(0xFF1E2A45),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: h * 0.7,
+            child: _buildEmptyState(w, h),
+          ),
+        ),
+      );
     }
 
     if (state is InterestError) {
@@ -252,7 +280,8 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
                       fontWeight: FontWeight.w800)),
             ],
           ),
-          Container(width: 1, height: h * 0.07, color: const Color(0xFF1E2A3F)),
+          Container(
+              width: 1, height: h * 0.07, color: const Color(0xFF1E2A3F)),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -388,10 +417,9 @@ class _InterestCard extends StatelessWidget {
                       padding: EdgeInsets.symmetric(
                           horizontal: w * 0.025, vertical: h * 0.004),
                       decoration: BoxDecoration(
-                        color: (isOpen
-                                ? const Color(0xFF22C55E)
-                                : const Color(0xFFEF4444))
-                            .withOpacity(0.15),
+                        color: isOpen
+                            ? const Color(0x2622C55E)
+                            : const Color(0x26EF4444),
                         borderRadius: BorderRadius.circular(w * 0.015),
                         border: Border.all(
                           color: isOpen
@@ -434,7 +462,7 @@ class _InterestCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(
                   horizontal: w * 0.03, vertical: h * 0.004),
               decoration: BoxDecoration(
-                color: industryColor.withOpacity(0.15),
+                color: Color.fromRGBO(industryColor.red, industryColor.green, industryColor.blue, 0.15),
                 borderRadius: BorderRadius.circular(w * 0.015),
               ),
               child: Text(interest.industry.toUpperCase(),
@@ -475,8 +503,8 @@ class _InterestCard extends StatelessWidget {
                 height: h * 0.055,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(w * 0.03),
-                  border:
-                      Border.all(color: const Color(0xFF6366F1), width: 1.5),
+                  border: Border.all(
+                      color: const Color(0xFF6366F1), width: 1.5),
                 ),
                 child: Center(
                   child: Text('VIEW DETAILS',
@@ -526,8 +554,8 @@ class _InterestCard extends StatelessWidget {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(w * 0.04)),
         title: const Text('Remove Interest',
-            style:
-                TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w700)),
         content: Text(
             'Are you sure you want to remove your interest in ${interest.companyName}?',
             style: const TextStyle(color: Color(0xFF94A3B8))),

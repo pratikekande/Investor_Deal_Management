@@ -17,6 +17,10 @@ class DealListingScreen extends StatefulWidget {
 
 class _DealListingScreenState extends State<DealListingScreen> {
   final TextEditingController _searchController = TextEditingController();
+  // FIX 1 & 2: A dedicated FocusNode lets us programmatically unfocus the
+  // search field both when the user taps elsewhere AND when returning from
+  // the detail screen (via Navigator.pop).
+  final FocusNode _searchFocusNode = FocusNode();
 
   bool _hasActiveFilters = false;
   int _activeFilterCount = 0;
@@ -24,12 +28,19 @@ class _DealListingScreenState extends State<DealListingScreen> {
   @override
   void initState() {
     super.initState();
+    // FIX 2: Unfocus immediately after the first frame so that if Flutter
+    // tries to restore focus (e.g. after a route pop), it gets cancelled.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.unfocus();
+    });
+
     context.read<DealBloc>().add(LoadAllDealsEvent());
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -91,6 +102,18 @@ class _DealListingScreenState extends State<DealListingScreen> {
     );
   }
 
+  // FIX 3: Pull-to-refresh handler — reloads all deals and clears search.
+  Future<void> _onRefresh() async {
+    _searchController.clear();
+    _searchFocusNode.unfocus();
+    context.read<DealBloc>().add(LoadAllDealsEvent());
+    // Wait until the state is no longer DealLoading.
+    await Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 100));
+      return context.read<DealBloc>().state is DealLoading;
+    }).timeout(const Duration(seconds: 10), onTimeout: () {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final double w = MediaQuery.of(context).size.width;
@@ -117,140 +140,164 @@ class _DealListingScreenState extends State<DealListingScreen> {
             ],
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(w, h, userName),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: w * 0.05, vertical: h * 0.012),
-                child: _buildSearchBar(w, h),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: w * 0.05),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () => _openFilterSheet(context),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: w * 0.04, vertical: h * 0.009),
-                        decoration: BoxDecoration(
-                          color: _hasActiveFilters
-                              ? const Color(0xFF6366F1).withOpacity(0.15)
-                              : Colors.transparent,
-                          borderRadius:
-                              BorderRadius.circular(w * 0.025),
-                          border: Border.all(
+        // FIX 1: GestureDetector with HitTestBehavior.opaque ensures taps
+        // on any empty area also trigger unfocus, dismissing the keyboard
+        // and removing the cursor from the search field.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(w, h, userName),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: w * 0.05, vertical: h * 0.012),
+                  child: _buildSearchBar(w, h),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: w * 0.05),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _openFilterSheet(context),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: w * 0.04, vertical: h * 0.009),
+                          decoration: BoxDecoration(
                             color: _hasActiveFilters
-                                ? const Color(0xFF6366F1)
-                                : const Color(0xFF2A3A55),
-                            width: 1.5,
+                                ? const Color(0x266366F1)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(w * 0.025),
+                            border: Border.all(
+                              color: _hasActiveFilters
+                                  ? const Color(0xFF6366F1)
+                                  : const Color(0xFF2A3A55),
+                              width: 1.5,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.tune_rounded,
-                                color: _hasActiveFilters
-                                    ? const Color(0xFF6366F1)
-                                    : const Color(0xFF94A3B8),
-                                size: w * 0.045),
-                            SizedBox(width: w * 0.02),
-                            Text('Filters',
-                                style: TextStyle(
+                          child: Row(
+                            children: [
+                              Icon(Icons.tune_rounded,
                                   color: _hasActiveFilters
                                       ? const Color(0xFF6366F1)
                                       : const Color(0xFF94A3B8),
-                                  fontSize: w * 0.038,
-                                  fontWeight: FontWeight.w600,
-                                )),
-                            if (_hasActiveFilters) ...[
+                                  size: w * 0.045),
                               SizedBox(width: w * 0.02),
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF6366F1),
-                                  shape: BoxShape.circle,
+                              Text('Filters',
+                                  style: TextStyle(
+                                    color: _hasActiveFilters
+                                        ? const Color(0xFF6366F1)
+                                        : const Color(0xFF94A3B8),
+                                    fontSize: w * 0.038,
+                                    fontWeight: FontWeight.w600,
+                                  )),
+                              if (_hasActiveFilters) ...[
+                                SizedBox(width: w * 0.02),
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF6366F1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text('$_activeFilterCount',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: w * 0.028,
+                                        fontWeight: FontWeight.w700,
+                                      )),
                                 ),
-                                child: Text('$_activeFilterCount',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: w * 0.028,
-                                      fontWeight: FontWeight.w700,
-                                    )),
-                              ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (_hasActiveFilters)
-                      GestureDetector(
-                        onTap: () {
-                          context.read<DealBloc>().add(ClearFiltersEvent());
-                          _updateFilterState(hasFilters: false, count: 0);
-                        },
-                        child: Padding(
-                          padding: EdgeInsets.only(right: w * 0.03),
-                          child: Text('Clear all',
-                              style: TextStyle(
-                                color: const Color(0xFFEF4444),
-                                fontSize: w * 0.032,
-                                fontWeight: FontWeight.w500,
-                              )),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              SizedBox(height: h * 0.015),
-              Expanded(
-                child: BlocBuilder<DealBloc, DealState>(
-                  builder: (ctx, state) {
-                    if (state is DealLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                            color: Color(0xFF6366F1)),
-                      );
-                    }
-                    if (state is DealError) {
-                      return Center(
-                        child: Text(state.message,
-                            style: const TextStyle(
-                                color: Color(0xFFEF4444))),
-                      );
-                    }
-                    if (state is DealsLoaded) {
-                      if (state.filteredDeals.isEmpty) {
-                        return _buildEmptyState(w, h);
-                      }
-                      final String investorEmail =
-                          (context.read<AuthBloc>().state
-                                  as AuthAuthenticated)
-                              .user
-                              .email;
-                      return ListView.builder(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: w * 0.05),
-                        itemCount: state.filteredDeals.length,
-                        itemBuilder: (_, i) => Padding(
-                          padding:
-                              EdgeInsets.only(bottom: h * 0.018),
-                          child: _DealCard(
-                            deal: state.filteredDeals[i],
-                            currentInvestorEmail: investorEmail,
-                            getRiskColor: _getRiskColor,
-                            getIndustryColor: _getIndustryColor,
                           ),
                         ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
+                      ),
+                      if (_hasActiveFilters)
+                        GestureDetector(
+                          onTap: () {
+                            context.read<DealBloc>().add(ClearFiltersEvent());
+                            _updateFilterState(hasFilters: false, count: 0);
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.only(right: w * 0.03),
+                            child: Text('Clear all',
+                                style: TextStyle(
+                                  color: const Color(0xFFEF4444),
+                                  fontSize: w * 0.032,
+                                  fontWeight: FontWeight.w500,
+                                )),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: h * 0.015),
+                Expanded(
+                  child: BlocBuilder<DealBloc, DealState>(
+                    builder: (ctx, state) {
+                      if (state is DealLoading) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                              color: Color(0xFF6366F1)),
+                        );
+                      }
+                      if (state is DealError) {
+                        return Center(
+                          child: Text(state.message,
+                              style: const TextStyle(
+                                  color: Color(0xFFEF4444))),
+                        );
+                      }
+                      if (state is DealsLoaded) {
+                        if (state.filteredDeals.isEmpty) {
+                          // FIX 3: Wrap empty state in RefreshIndicator too
+                          return RefreshIndicator(
+                            onRefresh: _onRefresh,
+                            color: const Color(0xFF6366F1),
+                            backgroundColor: const Color(0xFF1E2A45),
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: SizedBox(
+                                height: h * 0.5,
+                                child: _buildEmptyState(w, h),
+                              ),
+                            ),
+                          );
+                        }
+                        final String investorEmail =
+                            (context.read<AuthBloc>().state
+                                    as AuthAuthenticated)
+                                .user
+                                .email;
+                        // FIX 3: RefreshIndicator wraps the ListView.
+                        return RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          color: const Color(0xFF6366F1),
+                          backgroundColor: const Color(0xFF1E2A45),
+                          child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding:
+                                EdgeInsets.symmetric(horizontal: w * 0.05),
+                            itemCount: state.filteredDeals.length,
+                            itemBuilder: (_, i) => Padding(
+                              padding: EdgeInsets.only(bottom: h * 0.018),
+                              child: _DealCard(
+                                deal: state.filteredDeals[i],
+                                currentInvestorEmail: investorEmail,
+                                getRiskColor: _getRiskColor,
+                                getIndustryColor: _getIndustryColor,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -314,6 +361,9 @@ class _DealListingScreenState extends State<DealListingScreen> {
           Expanded(
             child: TextField(
               controller: _searchController,
+              // FIX 1 & 2: Attach the dedicated FocusNode so we can
+              // programmatically control focus from outside the TextField.
+              focusNode: _searchFocusNode,
               onChanged: (q) =>
                   context.read<DealBloc>().add(SearchDealsEvent(q)),
               style: TextStyle(color: Colors.white, fontSize: w * 0.038),
@@ -386,8 +436,7 @@ class _DealCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final double w = MediaQuery.of(context).size.width;
     final double h = MediaQuery.of(context).size.height;
-    final bool isOpen =
-        deal.status.toLowerCase() == 'open';
+    final bool isOpen = deal.status.toLowerCase() == 'open';
     final Color industryColor = getIndustryColor(deal.industry);
 
     return Container(
@@ -415,12 +464,10 @@ class _DealCard extends StatelessWidget {
                   padding: EdgeInsets.symmetric(
                       horizontal: w * 0.03, vertical: h * 0.005),
                   decoration: BoxDecoration(
-                    color: (isOpen
-                            ? const Color(0xFF22C55E)
-                            : const Color(0xFFEF4444))
-                        .withOpacity(0.15),
-                    borderRadius:
-                        BorderRadius.circular(w * 0.02),
+                    color: isOpen
+                        ? const Color(0x2622C55E)
+                        : const Color(0x26EF4444),
+                    borderRadius: BorderRadius.circular(w * 0.02),
                     border: Border.all(
                       color: isOpen
                           ? const Color(0xFF22C55E)
@@ -452,9 +499,8 @@ class _DealCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(
                   horizontal: w * 0.03, vertical: h * 0.004),
               decoration: BoxDecoration(
-                color: industryColor.withOpacity(0.15),
-                borderRadius:
-                    BorderRadius.circular(w * 0.015),
+                color: Color.fromRGBO(industryColor.red, industryColor.green, industryColor.blue, 0.15),
+                borderRadius: BorderRadius.circular(w * 0.015),
               ),
               child: Text(deal.industry.toUpperCase(),
                   style: TextStyle(
@@ -489,8 +535,7 @@ class _DealCard extends StatelessWidget {
                 width: double.infinity,
                 height: h * 0.055,
                 decoration: BoxDecoration(
-                  borderRadius:
-                      BorderRadius.circular(w * 0.03),
+                  borderRadius: BorderRadius.circular(w * 0.03),
                   border: Border.all(
                       color: const Color(0xFF6366F1), width: 1.5),
                 ),
@@ -537,7 +582,8 @@ class _DealCard extends StatelessWidget {
 // ── Filter Bottom Sheet ───────────────────────────────────────────────────────
 
 class _FilterBottomSheet extends StatefulWidget {
-  final void Function({required bool hasFilters, required int count}) onFiltersChanged;
+  final void Function({required bool hasFilters, required int count})
+      onFiltersChanged;
   const _FilterBottomSheet({required this.onFiltersChanged});
 
   @override
@@ -584,7 +630,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   },
                   child: Text('Reset',
                       style: TextStyle(
-                          color: const Color(0xFF6366F1), fontSize: w * 0.038)),
+                          color: const Color(0xFF6366F1),
+                          fontSize: w * 0.038)),
                 ),
               ],
             ),
@@ -607,16 +654,14 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                       filled: true,
                       fillColor: const Color(0xFF1E2A45),
                       border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(w * 0.03),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF2A3A55)),
+                        borderRadius: BorderRadius.circular(w * 0.03),
+                        borderSide:
+                            const BorderSide(color: Color(0xFF2A3A55)),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(w * 0.03),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF2A3A55)),
+                        borderRadius: BorderRadius.circular(w * 0.03),
+                        borderSide:
+                            const BorderSide(color: Color(0xFF2A3A55)),
                       ),
                     ),
                     items: [
@@ -630,8 +675,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                       'Retail',
                       'Agriculture'
                     ]
-                        .map((s) => DropdownMenuItem(
-                            value: s, child: Text(s)))
+                        .map((s) =>
+                            DropdownMenuItem(value: s, child: Text(s)))
                         .toList(),
                     onChanged: (v) =>
                         setState(() => _industry = v ?? 'All'),
@@ -644,8 +689,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         .map((r) => Padding(
                               padding: EdgeInsets.only(right: w * 0.02),
                               child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _risk = r),
+                                onTap: () => setState(() => _risk = r),
                                 child: Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: w * 0.04,
@@ -679,8 +723,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         .map((s) => Padding(
                               padding: EdgeInsets.only(right: w * 0.02),
                               child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _status = s),
+                                onTap: () => setState(() => _status = s),
                                 child: Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: w * 0.04,
@@ -726,25 +769,27 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     divisions: 20,
                     activeColor: const Color(0xFF6366F1),
                     inactiveColor: const Color(0xFF2A3A55),
-                    onChanged: (v) =>
-                        setState(() => _roiRange = v),
+                    onChanged: (v) => setState(() => _roiRange = v),
                   ),
                   SizedBox(height: h * 0.03),
                   GestureDetector(
                     onTap: () {
-                      final int count = [_industry == 'All' ? 0 : 1,
+                      final int count = [
+                        _industry == 'All' ? 0 : 1,
                         _risk == 'All' ? 0 : 1,
                         _status == 'All' ? 0 : 1,
                         (_roiRange.start > 0 || _roiRange.end < 100) ? 1 : 0
                       ].fold(0, (a, b) => a + b);
                       context.read<DealBloc>().add(FilterDealsEvent(
-                        industry: _industry == 'All' ? null : _industry,
-                        riskLevel: _risk == 'All' ? null : _risk,
-                        status: _status == 'All' ? null : _status,
-                        roiMin: _roiRange.start,
-                        roiMax: _roiRange.end,
-                      ));
-                      widget.onFiltersChanged(hasFilters: count > 0, count: count);
+                            industry:
+                                _industry == 'All' ? null : _industry,
+                            riskLevel: _risk == 'All' ? null : _risk,
+                            status: _status == 'All' ? null : _status,
+                            roiMin: _roiRange.start,
+                            roiMax: _roiRange.end,
+                          ));
+                      widget.onFiltersChanged(
+                          hasFilters: count > 0, count: count);
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -754,12 +799,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         gradient: const LinearGradient(
                           colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
                         ),
-                        borderRadius:
-                            BorderRadius.circular(w * 0.04),
+                        borderRadius: BorderRadius.circular(w * 0.04),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF6366F1)
-                                .withOpacity(0.3),
+                            color: const Color(0x4C6366F1),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),

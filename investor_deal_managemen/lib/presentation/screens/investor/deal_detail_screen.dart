@@ -53,6 +53,18 @@ class _DealDetailScreenState extends State<DealDetailScreen>
     super.dispose();
   }
 
+  // FIX 3: Refresh handler — re-checks interest status for this deal.
+  Future<void> _onRefresh() async {
+    _interestBloc.add(CheckInterestEvent(
+      dealId: widget.deal.id!,
+      investorEmail: widget.investorEmail,
+    ));
+    await Future.doWhile(() async {
+      await Future.delayed(const Duration(milliseconds: 100));
+      return _interestBloc.state is InterestLoading;
+    }).timeout(const Duration(seconds: 10), onTimeout: () {});
+  }
+
   Color _getRiskColor(String risk) {
     switch (risk.toLowerCase()) {
       case 'low':
@@ -119,43 +131,50 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                 children: [
                   _buildAppBar(w, h),
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: w * 0.05),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: h * 0.015),
-                          _buildCompanyHeaderCard(w, h),
-                          SizedBox(height: h * 0.025),
-                          _buildSectionTitle('Financial Highlights', w),
-                          SizedBox(height: h * 0.012),
-                          _buildFinancialGrid(w, h),
-                          SizedBox(height: h * 0.025),
-                          _buildSectionTitle('About the Deal', w),
-                          SizedBox(height: h * 0.012),
-                          Text(
-                            widget.deal.description.isNotEmpty
-                                ? widget.deal.description
-                                : 'This company is building innovative solutions in the ${widget.deal.industry} sector. '
-                                    'With a strong leadership team and a clear go-to-market strategy, they are '
-                                    'positioned for significant growth over the coming years.',
-                            style: TextStyle(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: w * 0.038,
-                              height: 1.6,
+                    // FIX 3: RefreshIndicator wraps the scrollable content.
+                    child: RefreshIndicator(
+                      onRefresh: _onRefresh,
+                      color: const Color(0xFF6366F1),
+                      backgroundColor: const Color(0xFF1E2A45),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: w * 0.05),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: h * 0.015),
+                            _buildCompanyHeaderCard(w, h),
+                            SizedBox(height: h * 0.025),
+                            _buildSectionTitle('Financial Highlights', w),
+                            SizedBox(height: h * 0.012),
+                            _buildFinancialGrid(w, h),
+                            SizedBox(height: h * 0.025),
+                            _buildSectionTitle('About the Deal', w),
+                            SizedBox(height: h * 0.012),
+                            Text(
+                              widget.deal.description.isNotEmpty
+                                  ? widget.deal.description
+                                  : 'This company is building innovative solutions in the ${widget.deal.industry} sector. '
+                                      'With a strong leadership team and a clear go-to-market strategy, they are '
+                                      'positioned for significant growth over the coming years.',
+                              style: TextStyle(
+                                color: const Color(0xFF94A3B8),
+                                fontSize: w * 0.038,
+                                height: 1.6,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: h * 0.025),
-                          _buildROIProjectionCard(w, h),
-                          SizedBox(height: h * 0.02),
-                          _buildRiskAnalysisCard(w, h),
-                          SizedBox(height: h * 0.025),
-                          _buildSectionTitle('Visual Assets', w),
-                          SizedBox(height: h * 0.012),
-                          _buildVisualAssets(w, h),
-                          SizedBox(height: h * 0.05),
-                        ],
+                            SizedBox(height: h * 0.025),
+                            _buildROIProjectionCard(w, h),
+                            SizedBox(height: h * 0.02),
+                            _buildRiskAnalysisCard(w, h),
+                            SizedBox(height: h * 0.025),
+                            _buildSectionTitle('Visual Assets', w),
+                            SizedBox(height: h * 0.012),
+                            _buildVisualAssets(w, h),
+                            SizedBox(height: h * 0.05),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -238,8 +257,8 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                   borderRadius: BorderRadius.circular(w * 0.03),
                   gradient: LinearGradient(
                     colors: [
-                      industryColor.withOpacity(0.3),
-                      industryColor.withOpacity(0.7),
+                      Color.fromRGBO(industryColor.red, industryColor.green, industryColor.blue, 0.3),
+                      Color.fromRGBO(industryColor.red, industryColor.green, industryColor.blue, 0.7),
                     ],
                   ),
                 ),
@@ -253,7 +272,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                     padding: EdgeInsets.symmetric(
                         horizontal: w * 0.03, vertical: h * 0.004),
                     decoration: BoxDecoration(
-                      color: industryColor.withOpacity(0.15),
+                      color: Color.fromRGBO(industryColor.red, industryColor.green, industryColor.blue, 0.15),
                       borderRadius: BorderRadius.circular(w * 0.015),
                     ),
                     child: Text(widget.deal.industry.toUpperCase(),
@@ -268,10 +287,9 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                     padding: EdgeInsets.symmetric(
                         horizontal: w * 0.03, vertical: h * 0.004),
                     decoration: BoxDecoration(
-                      color: (isOpen
-                              ? const Color(0xFF22C55E)
-                              : const Color(0xFFEF4444))
-                          .withOpacity(0.15),
+                      color: isOpen
+                          ? const Color(0x2622C55E)
+                          : const Color(0x26EF4444),
                       borderRadius: BorderRadius.circular(w * 0.015),
                       border: Border.all(
                         color: isOpen
@@ -383,8 +401,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
         decoration: BoxDecoration(
           color: const Color(0xFF162035),
           borderRadius: BorderRadius.circular(w * 0.03),
-          border:
-              Border.all(color: const Color(0xFF2A3A55), width: 1),
+          border: Border.all(color: const Color(0xFF2A3A55), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,8 +447,7 @@ class _DealDetailScreenState extends State<DealDetailScreen>
       decoration: BoxDecoration(
         color: const Color(0xFF1E2A45),
         borderRadius: BorderRadius.circular(w * 0.04),
-        border:
-            Border.all(color: const Color(0xFF2A3A55), width: 1),
+        border: Border.all(color: const Color(0xFF2A3A55), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,8 +524,8 @@ class _DealDetailScreenState extends State<DealDetailScreen>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFF6366F1).withOpacity(0.3),
-                          const Color(0xFF6366F1).withOpacity(0.0),
+                          const Color(0x4C6366F1),
+                          const Color(0x006366F1),
                         ],
                       ),
                     ),
@@ -540,10 +556,8 @@ class _DealDetailScreenState extends State<DealDetailScreen>
           border: Border(
             left: BorderSide(color: riskColor, width: w * 0.012),
             top: const BorderSide(color: Color(0xFF2A3A55), width: 1),
-            right:
-                const BorderSide(color: Color(0xFF2A3A55), width: 1),
-            bottom:
-                const BorderSide(color: Color(0xFF2A3A55), width: 1),
+            right: const BorderSide(color: Color(0xFF2A3A55), width: 1),
+            bottom: const BorderSide(color: Color(0xFF2A3A55), width: 1),
           ),
         ),
         child: Column(
@@ -620,28 +634,44 @@ class _DealDetailScreenState extends State<DealDetailScreen>
   }
 
   Widget _buildBottomButton(double w, double h) {
+    final bool isClosed = widget.deal.status.toLowerCase() == 'closed';
+
     return BlocConsumer<InterestBloc, InterestState>(
       listener: (ctx, state) {
         if (state is InterestOperationSuccess) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-            content: Text(state.message),
-            backgroundColor: const Color(0xFF1E2A45),
-            behavior: SnackBarBehavior.floating,
-          ));
+          // Determine if this was an "express" or "remove" action by checking
+          // the message content so we can colour the snackbar accordingly.
+          final bool wasExpressed =
+              state.message.toLowerCase().contains('express') ||
+              state.message.toLowerCase().contains('added') ||
+              state.message.toLowerCase().contains('interest');
+          _showSnackBar(
+            ctx,
+            message: state.message,
+            icon: wasExpressed ? Icons.bookmark_added_rounded : Icons.bookmark_remove_rounded,
+            iconColor: wasExpressed ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+            borderColor: wasExpressed ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+          );
           ctx.read<InterestBloc>().add(CheckInterestEvent(
                 dealId: widget.deal.id!,
                 investorEmail: widget.investorEmail,
               ));
         }
         if (state is InterestError) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-            content: Text(state.message),
-            backgroundColor: const Color(0xFFEF4444),
-            behavior: SnackBarBehavior.floating,
-          ));
+          _showSnackBar(
+            ctx,
+            message: state.message,
+            icon: Icons.error_outline_rounded,
+            iconColor: const Color(0xFFEF4444),
+            borderColor: const Color(0xFFEF4444),
+          );
         }
       },
       builder: (ctx, state) {
+        final bool isInterested =
+            state is InterestChecked && state.isInterested;
+        final bool isLoading = state is InterestLoading;
+
         return Container(
           padding: EdgeInsets.symmetric(
               horizontal: w * 0.05, vertical: h * 0.015),
@@ -650,94 +680,191 @@ class _DealDetailScreenState extends State<DealDetailScreen>
             border: Border(
                 top: BorderSide(color: Color(0xFF1E2A45), width: 1)),
           ),
-          child: GestureDetector(
-            onTap: () {
-              if (state is InterestLoading) return;
-              if (state is InterestChecked && state.isInterested) {
-                ctx.read<InterestBloc>().add(RemoveInterestEvent(
-                      dealId: widget.deal.id!,
-                      investorEmail: widget.investorEmail,
-                    ));
-              } else {
-                ctx.read<InterestBloc>().add(ExpressInterestEvent(
-                      InterestEntity(
-                        dealId: widget.deal.id!,
-                        investorEmail: widget.investorEmail,
-                        dealTitle: widget.deal.title,
-                        companyName: widget.deal.companyName,
-                        industry: widget.deal.industry,
-                        investmentRequired:
-                            widget.deal.investmentRequired,
-                        expectedRoi: widget.deal.expectedRoi,
-                        riskLevel: widget.deal.riskLevel,
-                        status: widget.deal.status,
-                        postedByEmail: widget.deal.postedByEmail,
-                        postedByName: widget.deal.postedByName,
-                        description: widget.deal.description,
-                        createdAt: DateTime.now().toIso8601String(),
-                      ),
-                    ));
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: double.infinity,
-              height: h * 0.068,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(w * 0.04),
-                gradient: LinearGradient(
-                  colors: (state is InterestChecked && state.isInterested)
-                      ? [
-                          const Color(0xFF22C55E),
-                          const Color(0xFF16A34A)
-                        ]
-                      : [
-                          const Color(0xFF4F46E5),
-                          const Color(0xFF6366F1)
-                        ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ((state is InterestChecked && state.isInterested)
-                            ? const Color(0xFF22C55E)
-                            : const Color(0xFF6366F1))
-                        .withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
+          child: isClosed
+              // ── CLOSED DEAL — disabled button ──────────────────────────
+              ? Container(
+                  width: double.infinity,
+                  height: h * 0.068,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E2A45),
+                    borderRadius: BorderRadius.circular(w * 0.04),
+                    border: Border.all(
+                        color: const Color(0xFF2A3A55), width: 1.5),
                   ),
-                ],
-              ),
-              child: state is InterestLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.5,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.lock_outline_rounded,
+                          color: const Color(0xFF64748B), size: w * 0.05),
+                      SizedBox(width: w * 0.025),
+                      Text(
+                        'Deal Closed — No Longer Accepting Interest',
+                        style: TextStyle(
+                            color: const Color(0xFF64748B),
+                            fontSize: w * 0.033,
+                            fontWeight: FontWeight.w600),
                       ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          (state is InterestChecked && state.isInterested)
-                              ? 'Interest Expressed ✓'
-                              : "I'm Interested",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: w * 0.045,
-                              fontWeight: FontWeight.w700),
+                    ],
+                  ),
+                )
+              // ── OPEN DEAL — active button ───────────────────────────────
+              : GestureDetector(
+                  onTap: () {
+                    if (isLoading) return;
+                    if (isInterested) {
+                      ctx.read<InterestBloc>().add(RemoveInterestEvent(
+                            dealId: widget.deal.id!,
+                            investorEmail: widget.investorEmail,
+                          ));
+                    } else {
+                      ctx.read<InterestBloc>().add(ExpressInterestEvent(
+                            InterestEntity(
+                              dealId: widget.deal.id!,
+                              investorEmail: widget.investorEmail,
+                              dealTitle: widget.deal.title,
+                              companyName: widget.deal.companyName,
+                              industry: widget.deal.industry,
+                              investmentRequired:
+                                  widget.deal.investmentRequired,
+                              expectedRoi: widget.deal.expectedRoi,
+                              riskLevel: widget.deal.riskLevel,
+                              status: widget.deal.status,
+                              postedByEmail: widget.deal.postedByEmail,
+                              postedByName: widget.deal.postedByName,
+                              description: widget.deal.description,
+                              createdAt: DateTime.now().toIso8601String(),
+                            ),
+                          ));
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: double.infinity,
+                    height: h * 0.068,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(w * 0.04),
+                      gradient: LinearGradient(
+                        colors: isInterested
+                            ? [
+                                const Color(0xFF22C55E),
+                                const Color(0xFF16A34A),
+                              ]
+                            : [
+                                const Color(0xFF4F46E5),
+                                const Color(0xFF6366F1),
+                              ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isInterested
+                              ? const Color(0x4C22C55E)
+                              : const Color(0x4C6366F1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
                         ),
-                        if (!(state is InterestChecked &&
-                            state.isInterested)) ...[
-                          SizedBox(width: w * 0.02),
-                          Icon(Icons.arrow_forward_rounded,
-                              color: Colors.white, size: w * 0.05),
-                        ],
                       ],
                     ),
-            ),
-          ),
+                    child: isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                isInterested
+                                    ? Icons.bookmark_added_rounded
+                                    : Icons.bookmark_add_rounded,
+                                color: Colors.white,
+                                size: w * 0.05,
+                              ),
+                              SizedBox(width: w * 0.025),
+                              Text(
+                                isInterested
+                                    ? 'Interest Expressed ✓'
+                                    : "I'm Interested",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: w * 0.045,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              if (!isInterested) ...[
+                                SizedBox(width: w * 0.02),
+                                Icon(Icons.arrow_forward_rounded,
+                                    color: Colors.white, size: w * 0.05),
+                              ],
+                            ],
+                          ),
+                  ),
+                ),
         );
       },
     );
+  }
+
+  /// Shows a styled snackbar with an icon, coloured border, and dark background
+  /// so text is always clearly visible.
+  void _showSnackBar(
+    BuildContext ctx, {
+    required String message,
+    required IconData icon,
+    required Color iconColor,
+    required Color borderColor,
+  }) {
+    ScaffoldMessenger.of(ctx)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          margin: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(ctx).size.width * 0.04,
+            vertical: MediaQuery.of(ctx).size.height * 0.015,
+          ),
+          content: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D1B3E),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: borderColor, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0x66000000),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(
+                        iconColor.red, iconColor.green, iconColor.blue, 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
   }
 }
