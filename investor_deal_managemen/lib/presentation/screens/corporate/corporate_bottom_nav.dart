@@ -7,7 +7,7 @@ import 'package:investor_deal_managemen/presentation/bloc/deal/deal_bloc.dart';
 import 'package:investor_deal_managemen/presentation/bloc/deal/deal_event.dart';
 import 'package:investor_deal_managemen/presentation/screens/corporate/corporate_dashboard_screen.dart';
 import 'package:investor_deal_managemen/presentation/screens/corporate/corporate_profile_screen.dart';
-import 'package:investor_deal_managemen/presentation/screens/corporate/deal_management_screen.dart';
+import 'package:investor_deal_managemen/presentation/screens/corporate/my_deals_screen.dart';
 // Add the import for your profile screen here!
 // import 'package:investor_deal_managemen/presentation/screens/corporate/corporate_profile_screen.dart'; 
 

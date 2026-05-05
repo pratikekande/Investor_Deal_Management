@@ -32,7 +32,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
     }
   }
 
-  // FIX 3: Pull-to-refresh handler.
   Future<void> _onRefresh() async {
     _loadInterests();
     await Future.doWhile(() async {
@@ -124,11 +123,29 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
           child: BlocConsumer<InterestBloc, InterestState>(
             listener: (ctx, state) {
               if (state is InterestOperationSuccess) {
-                ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: const Color(0xFF1E2A45),
-                  behavior: SnackBarBehavior.floating,
-                ));
+                // Detect if this was a removal by checking the message
+                final bool isRemoval =
+                    state.message.toLowerCase().contains('remov') ||
+                    state.message.toLowerCase().contains('delet');
+
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      state.message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: isRemoval
+                        ? const Color(0xFFEF4444) // red for removal
+                        : const Color(0xFF22C55E), // green for any other success
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
               }
             },
             builder: (ctx, state) {
@@ -199,7 +216,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
         children: [
           _buildSummaryCard(list, w, h),
           Expanded(
-            // FIX 3: RefreshIndicator wraps the interests ListView.
             child: RefreshIndicator(
               onRefresh: _onRefresh,
               color: const Color(0xFF6366F1),
@@ -227,7 +243,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
     if (state is InterestsLoaded ||
         state is InterestChecked ||
         state is InterestOperationSuccess) {
-      // FIX 3: Empty state also supports pull-to-refresh.
       return RefreshIndicator(
         onRefresh: _onRefresh,
         color: const Color(0xFF6366F1),
@@ -462,7 +477,8 @@ class _InterestCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(
                   horizontal: w * 0.03, vertical: h * 0.004),
               decoration: BoxDecoration(
-                color: Color.fromRGBO(industryColor.red, industryColor.green, industryColor.blue, 0.15),
+                color: Color.fromRGBO(industryColor.red, industryColor.green,
+                    industryColor.blue, 0.15),
                 borderRadius: BorderRadius.circular(w * 0.015),
               ),
               child: Text(interest.industry.toUpperCase(),

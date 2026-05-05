@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:investor_deal_managemen/core/failures.dart';
+import 'package:investor_deal_managemen/data/dummy_data/dummy_deals.dart';
 import 'package:investor_deal_managemen/domain/entities/deal_entity.dart';
 import 'package:investor_deal_managemen/domain/usecases/deals_usecases.dart';
 import 'package:investor_deal_managemen/presentation/bloc/deal/deal_event.dart';
@@ -78,7 +79,16 @@ class DealBloc extends Bloc<DealEvent, DealState> {
       LoadAllDealsEvent event, Emitter<DealState> emit) async {
     emit(DealLoading());
     try {
-      _allDeals = await getAllDealsUsecase.call();
+      final realDeals = await getAllDealsUsecase.call();
+
+      // Dummy deals are always shown; real deals from DB are prepended on top.
+      // Duplicate guard: remove any dummy deal whose id clashes with a real one
+      // (shouldn't happen since dummy ids are negative, but just to be safe).
+      final dummyDeals = DummyDeals.list
+          .where((d) => realDeals.every((r) => r.id != d.id))
+          .toList();
+
+      _allDeals = [...realDeals, ...dummyDeals];
       emit(DealsLoaded(allDeals: _allDeals, filteredDeals: _applyFilters()));
     } on DatabaseFailure catch (e) {
       emit(DealError(e.message));
@@ -105,14 +115,11 @@ class DealBloc extends Bloc<DealEvent, DealState> {
     emit(DealLoading());
     try {
       final posted = await postDealUsecase.call(event.deal);
+      // Insert the new real deal at the top, before dummy deals.
       _allDeals = [posted, ..._allDeals];
-      
-      // Notify listeners of the post success
+
       emit(DealPosted(posted));
-      
-      // ✅ Update the UI immediately with the fresh list
       emit(DealsLoaded(allDeals: _allDeals, filteredDeals: _applyFilters()));
-      
     } on DatabaseFailure catch (e) {
       emit(DealError(e.message));
     } catch (e) {
@@ -157,8 +164,7 @@ class DealBloc extends Bloc<DealEvent, DealState> {
   void _onSearchDeals(SearchDealsEvent event, Emitter<DealState> emit) {
     _searchQuery = event.query;
     if (state is DealsLoaded) {
-      emit(DealsLoaded(
-          allDeals: _allDeals, filteredDeals: _applyFilters()));
+      emit(DealsLoaded(allDeals: _allDeals, filteredDeals: _applyFilters()));
     }
   }
 
@@ -169,8 +175,7 @@ class DealBloc extends Bloc<DealEvent, DealState> {
     _roiMin = event.roiMin;
     _roiMax = event.roiMax;
     if (state is DealsLoaded) {
-      emit(DealsLoaded(
-          allDeals: _allDeals, filteredDeals: _applyFilters()));
+      emit(DealsLoaded(allDeals: _allDeals, filteredDeals: _applyFilters()));
     }
   }
 
@@ -182,8 +187,7 @@ class DealBloc extends Bloc<DealEvent, DealState> {
     _roiMin = 0;
     _roiMax = 100;
     if (state is DealsLoaded) {
-      emit(DealsLoaded(
-          allDeals: _allDeals, filteredDeals: _applyFilters()));
+      emit(DealsLoaded(allDeals: _allDeals, filteredDeals: _applyFilters()));
     }
   }
 }
