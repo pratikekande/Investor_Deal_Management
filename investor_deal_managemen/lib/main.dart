@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:investor_deal_managemen/core/route_observer.dart'; // ← add this
 import 'package:investor_deal_managemen/injection_container.dart' as di;
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_event.dart';
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark(),
+        navigatorObservers: [routeObserver], // ← add this
         home: const SplashScreen(),
       ),
     );

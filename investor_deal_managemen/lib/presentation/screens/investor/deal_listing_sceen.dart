@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:investor_deal_managemen/core/route_observer.dart';
 import 'package:investor_deal_managemen/domain/entities/deal_entity.dart';
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_bloc.dart';
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_state.dart';
@@ -15,11 +16,8 @@ class DealListingScreen extends StatefulWidget {
   State<DealListingScreen> createState() => _DealListingScreenState();
 }
 
-class _DealListingScreenState extends State<DealListingScreen> {
+class _DealListingScreenState extends State<DealListingScreen> with RouteAware {
   final TextEditingController _searchController = TextEditingController();
-  // FIX 1 & 2: A dedicated FocusNode lets us programmatically unfocus the
-  // search field both when the user taps elsewhere AND when returning from
-  // the detail screen (via Navigator.pop).
   final FocusNode _searchFocusNode = FocusNode();
 
   bool _hasActiveFilters = false;
@@ -28,20 +26,32 @@ class _DealListingScreenState extends State<DealListingScreen> {
   @override
   void initState() {
     super.initState();
-    // FIX 2: Unfocus immediately after the first frame so that if Flutter
-    // tries to restore focus (e.g. after a route pop), it gets cancelled.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocusNode.unfocus();
     });
-
     context.read<DealBloc>().add(LoadAllDealsEvent());
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Fires when the user pops back from DealDetailScreen.
+  @override
+  void didPopNext() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _searchFocusNode.unfocus();
+    });
   }
 
   Color _getRiskColor(String risk) {
@@ -102,12 +112,10 @@ class _DealListingScreenState extends State<DealListingScreen> {
     );
   }
 
-  // FIX 3: Pull-to-refresh handler — reloads all deals and clears search.
   Future<void> _onRefresh() async {
     _searchController.clear();
     _searchFocusNode.unfocus();
     context.read<DealBloc>().add(LoadAllDealsEvent());
-    // Wait until the state is no longer DealLoading.
     await Future.doWhile(() async {
       await Future.delayed(const Duration(milliseconds: 100));
       return context.read<DealBloc>().state is DealLoading;
@@ -140,9 +148,6 @@ class _DealListingScreenState extends State<DealListingScreen> {
             ],
           ),
         ),
-        // FIX 1: GestureDetector with HitTestBehavior.opaque ensures taps
-        // on any empty area also trigger unfocus, dismissing the keyboard
-        // and removing the cursor from the search field.
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => FocusScope.of(context).unfocus(),
@@ -251,7 +256,6 @@ class _DealListingScreenState extends State<DealListingScreen> {
                       }
                       if (state is DealsLoaded) {
                         if (state.filteredDeals.isEmpty) {
-                          // FIX 3: Wrap empty state in RefreshIndicator too
                           return RefreshIndicator(
                             onRefresh: _onRefresh,
                             color: const Color(0xFF6366F1),
@@ -270,7 +274,6 @@ class _DealListingScreenState extends State<DealListingScreen> {
                                     as AuthAuthenticated)
                                 .user
                                 .email;
-                        // FIX 3: RefreshIndicator wraps the ListView.
                         return RefreshIndicator(
                           onRefresh: _onRefresh,
                           color: const Color(0xFF6366F1),
@@ -361,8 +364,6 @@ class _DealListingScreenState extends State<DealListingScreen> {
           Expanded(
             child: TextField(
               controller: _searchController,
-              // FIX 1 & 2: Attach the dedicated FocusNode so we can
-              // programmatically control focus from outside the TextField.
               focusNode: _searchFocusNode,
               onChanged: (q) =>
                   context.read<DealBloc>().add(SearchDealsEvent(q)),
@@ -499,7 +500,8 @@ class _DealCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(
                   horizontal: w * 0.03, vertical: h * 0.004),
               decoration: BoxDecoration(
-                color: Color.fromRGBO(industryColor.red, industryColor.green, industryColor.blue, 0.15),
+                color: Color.fromRGBO(industryColor.red, industryColor.green,
+                    industryColor.blue, 0.15),
                 borderRadius: BorderRadius.circular(w * 0.015),
               ),
               child: Text(deal.industry.toUpperCase(),
