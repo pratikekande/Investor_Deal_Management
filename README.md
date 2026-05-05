@@ -223,27 +223,6 @@ Three BLoCs manage all meaningful state:
 
 BLoC was chosen over `setState` or `Provider` because it enforces a clean event → state flow, makes loading/error/success states explicit, and keeps all business logic out of widget trees.
 
-### 3. In-Memory Filtering in DealBloc
-Rather than running a new SQLite query every time the user types or changes a filter, `DealBloc` holds the full deal list in memory (`_allDeals`) and applies a `_applyFilters()` method that re-computes the filtered list on every `SearchDealsEvent` or `FilterDealsEvent`. This approach gives instant UI updates with no async delay for filter changes.
-
-### 4. SQLite as the Sole Persistence Layer
-All data — users, deals, interests — lives in a single local `dealflow.db` SQLite database managed by a `DatabaseHelper` singleton. There is no remote backend. A `UNIQUE` constraint on `(deal_id, investor_email)` in the interests table prevents duplicate interest entries at the database level.
-
-### 5. Dummy Seed Data Strategy
-Three realistic dummy deals (with negative IDs like `-1`, `-2`, `-3`) are always merged into the deal list fetched from SQLite. The negative IDs guarantee they never clash with auto-incremented real deal IDs. This ensures the investor listing screen always has content to browse even on a fresh install.
-
-### 6. Dependency Injection with GetIt
-`injection_container.dart` wires the entire dependency graph in order: Core → Datasources → Repositories → Use Cases → BLoCs. Repositories and datasources are registered as **singletons** (shared state), while BLoCs and use cases are **factories** (new instance per use). This gives the app predictable lifecycle management without a manual service locator.
-
-### 7. Role-Based Navigation
-On sign in, the app reads `user.role` from the returned `UserEntity` and routes to either `InvestorBottomNav` or `CorporateBottomNav`. Each bottom nav provides its own `BlocProvider` scope, ensuring BLoC instances are scoped to their role and disposed correctly on logout.
-
-### 8. Session Persistence
-`SharedPreferences` stores `email`, `role`, and `name` after a successful sign in or sign up. On every cold start, `SplashScreen` dispatches `CheckSessionEvent` to `AuthBloc`, which calls `GetSessionUsecase`. If a valid session exists, the user is routed directly to their home screen — skipping the sign in flow entirely.
-
-### 9. Simulated API Delay
-`DealLocalDatasourceImpl.getAllDeals()` includes a 600ms `Future.delayed` and `getDealsByPostedByEmail()` a 300ms delay. This was a deliberate decision to simulate a real network call and test that loading states (`DealLoading`) render correctly in the UI.
-
 ---
 
 ## 🛠️ Tech Stack
@@ -258,7 +237,7 @@ On sign in, the app reads `user.role` from the returned `UserEntity` and routes 
 | Dependency Injection | get_it |
 | Architecture | Clean Architecture (Domain / Data / Presentation) |
 | IDE | VS Code |
-| Version Control | GitLab |
+| Version Control | Github |
 
 ---
 
@@ -305,11 +284,6 @@ flutter run
 ## 🧪 Test Credentials
 
 You can register directly in the app, or use these accounts if pre-seeded:
-
-| Role | Email | Password |
-|---|---|---|
-| Investor | prajwal@gmail.com | any password you set at sign up |
-| Corporate | nexus@gmail.com | any password you set at sign up |
 
 > Accounts are stored locally in SQLite — register once and the session persists.
 
