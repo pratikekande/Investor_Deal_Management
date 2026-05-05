@@ -30,7 +30,7 @@
   </tr>
   <tr>
     <td><img src="ScreenShots/Investor/Deal Listing.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Investor/Deals - Search_Bar.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Deals - Search Bar.jpeg" width="220"/></td>
     <td><img src="ScreenShots/Investor/Deals Filtering.jpeg" width="220"/></td>
     <td><img src="ScreenShots/Investor/Deals Filtering-2.jpeg" width="220"/></td>
   </tr>
