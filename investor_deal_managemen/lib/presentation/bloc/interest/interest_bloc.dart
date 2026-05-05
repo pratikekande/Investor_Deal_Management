@@ -1,10 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:investor_deal_managemen/core/failures.dart';
 import 'package:investor_deal_managemen/domain/entities/interest_entity.dart';
-import 'package:investor_deal_managemen/domain/usecases/check_interest_usecase.dart';
-import 'package:investor_deal_managemen/domain/usecases/express_interest_usecase.dart';
-import 'package:investor_deal_managemen/domain/usecases/get_my_interests_usecase.dart';
-import 'package:investor_deal_managemen/domain/usecases/remove_interest_usecase.dart';
+import 'package:investor_deal_managemen/domain/usecases/deals_usecases.dart';
 import 'package:investor_deal_managemen/presentation/bloc/interest/interest_event.dart';
 import 'package:investor_deal_managemen/presentation/bloc/interest/interest_state.dart';
 

@@ -1,9 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:investor_deal_managemen/core/failures.dart';
-import 'package:investor_deal_managemen/domain/usecases/get_session_usecase.dart';
-import 'package:investor_deal_managemen/domain/usecases/sign_in_usecase.dart';
-import 'package:investor_deal_managemen/domain/usecases/sign_out_usecase.dart';
-import 'package:investor_deal_managemen/domain/usecases/sign_up_usecase.dart';
+import 'package:investor_deal_managemen/domain/usecases/auth_usecases.dart';
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_event.dart';
 import 'package:investor_deal_managemen/presentation/bloc/auth/auth_state.dart';
 
