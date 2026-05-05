@@ -30,9 +30,9 @@
   </tr>
   <tr>
     <td><img src="ScreenShots/Investor/Deal Listing.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Investor/Deals_-_Search_Bar.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Investor/Deals_Filtering.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Investor/Deals_Filtering-2.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Deals - Search_Bar.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Deals Filtering.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Deals Filtering-2.jpeg" width="220"/></td>
   </tr>
 </table>
 
@@ -45,10 +45,10 @@
     <td align="center"><b>Investor Profile</b></td>
   </tr>
   <tr>
-    <td><img src="ScreenShots/Investor/Deal_Details-2.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Investor/Deal_Deatils-2.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Investor/Intrested_Deals.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Investor/Investor_Profile.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Deal Details-1.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Deal Deatils-2.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Intrested Deals.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Investor/Investor Profile.jpeg" width="220"/></td>
   </tr>
 </table>
 
@@ -61,8 +61,8 @@
   </tr>
   <tr>
     <td><img src="ScreenShots/Corporate/Corporate Dashboard.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Corporate/Corporate_My_Deals.jpeg" width="220"/></td>
-    <td><img src="ScreenShots/Corporate/Corporate_Profile.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Corporate/Corporate My Deals.jpeg" width="220"/></td>
+    <td><img src="ScreenShots/Corporate/Corporate Profile.jpeg" width="220"/></td>
   </tr>
 </table>
 
