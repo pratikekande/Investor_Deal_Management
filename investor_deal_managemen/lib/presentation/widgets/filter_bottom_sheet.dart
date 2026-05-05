@@ -505,27 +505,27 @@ class _StatusRow extends StatelessWidget {
   }
 }
 
-class _DiagonalLinePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF3B82F6).withOpacity(0.06)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
+// class _DiagonalLinePainter extends CustomPainter {
+//   @override
+//   void paint(Canvas canvas, Size size) {
+//     final paint = Paint()
+//       ..color = const Color(0xFF3B82F6).withOpacity(0.06)
+//       ..strokeWidth = 1.5
+//       ..style = PaintingStyle.stroke;
 
-    const double gap = 18;
-    for (double i = -size.height; i < size.width + size.height; i += gap) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
-  }
+//     const double gap = 18;
+//     for (double i = -size.height; i < size.width + size.height; i += gap) {
+//       canvas.drawLine(
+//         Offset(i, 0),
+//         Offset(i + size.height, size.height),
+//         paint,
+//       );
+//     }
+//   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter _) => false;
-}
+//   @override
+//   bool shouldRepaint(covariant CustomPainter _) => false;
+// }
 
 // ─── Apply Filters button ─────────────────────────────────────────────────────
 class _ApplyButton extends StatelessWidget {

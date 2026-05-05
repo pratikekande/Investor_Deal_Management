@@ -335,24 +335,6 @@ class _MyInterestsScreenState extends State<MyInterestsScreen> {
               style: TextStyle(
                   color: const Color(0xFF94A3B8), fontSize: w * 0.036)),
           SizedBox(height: h * 0.03),
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: w * 0.06, vertical: h * 0.015),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                ),
-                borderRadius: BorderRadius.circular(w * 0.035),
-              ),
-              child: Text('Browse Deals',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: w * 0.04,
-                      fontWeight: FontWeight.w700)),
-            ),
-          ),
         ],
       ),
     );
