@@ -79,21 +79,32 @@ All data is persisted **100% locally** using SQLite — no internet connection o
 
 ---
 
+---
+
 ## 🚀 Features
 
-### 🔐 Authentication
+### 🔐 Authentication — Common for Both Roles
 - Role-based sign up — choose **Investor** or **Corporate** at registration
 - Email + password sign in with credential validation
 - Session persistence via `SharedPreferences` — stay logged in across app restarts
 - Auto-routing on launch: Splash → correct home screen based on saved session
 
-### 📋 Deal Listing (Investor)
-- Displays all deals as scrollable cards showing: Company Name, Industry Tag, Investment Required (INR), Expected ROI (%), Risk Level, and Status (Open/Closed)
+### 👤 Profile — Common for Both Roles
+- Avatar with initials, name, email, and role chip
+- Info card displaying Name / Email / Role
+- Logout button — clears session and navigates back to Sign In
+
+---
+
+### 📱 Investor
+
+#### 📋 Deal Listing
+- Scrollable deal cards showing: Company Name, Industry Tag, Investment Required (INR), Expected ROI (%), Risk Level, and Status
 - Colour-coded risk badges: 🟢 Low / 🟡 Medium / 🔴 High
-- Industry chips with distinct colour per sector
+- Industry chips with a distinct colour per sector
 - Simulated API delay (600ms) on data load for realistic UX
 
-### 🔍 Search & Filter
+#### 🔍 Search & Filter
 - Live search by company name or deal title — results update on every keystroke
 - Filter bottom sheet with:
   - Industry dropdown
@@ -101,49 +112,50 @@ All data is persisted **100% locally** using SQLite — no internet connection o
   - Status selector (All / Open / Closed)
   - ROI range slider (0–100%)
 - Active filter badge count shown on the filter button
-- One-tap "Clear All" to reset filters
-- All filtering runs **in-memory** inside `DealBloc` with no additional DB queries
+- One-tap "Clear All" to reset all filters instantly
+- All filtering runs **in-memory** inside `DealBloc` — no additional DB queries
 
-### 📄 Deal Detail Screen
-- Company header card with industry colour theming and live Open/Closed status
+#### 📄 Deal Detail
+- Company header card with industry colour theming and live Open / Closed status
 - Financial highlights grid: Investment Required, Expected ROI, Risk Level, Deal Status
 - Deal description paragraph
 - **ROI Projection line chart** powered by `fl_chart` — animated curve from JAN to DEC
-- **Risk Analysis card** with colour-coded left border (green/amber/red) matching risk level
-- Visual assets section
+- **Risk Analysis card** with colour-coded left border (🟢/🟡/🔴) matching risk level
 - Sticky bottom CTA button:
   - **"I'm Interested"** → purple gradient → saves interest to SQLite
-  - **"Interest Expressed ✓"** → green gradient → one more tap removes interest
+  - **"Interest Expressed ✓"** → green gradient → tap again to remove interest
   - **Locked state** for Closed deals with explanatory message
 
-### 🔖 My Interests (Investor)
-- Summary card showing total deals saved and aggregated total potential investment (auto-formatted to L / Cr)
-- Each interest card mirrors the deal card with a delete button
-- Confirm-before-remove dialog
+#### 🔖 My Interests
+- Summary card: total deals saved + aggregated total potential investment (auto-formatted to L / Cr)
+- Each interest card mirrors the deal listing card with a delete button
+- Confirm-before-remove dialog to prevent accidental deletion
 - Pull-to-refresh support
 
-### 🏢 Corporate Dashboard
-- Stats row: Total Deals / Open / Closed (live from BLoC state)
-- Investor interest counter card with mini bar chart visualisation
-- "POST NEW DEAL" CTA button
-- Recent deals preview list
-- Market Insights banner with custom `CustomPainter` wave background
+---
 
-### 📁 Post New Deal (Corporate)
-- Full form: Title, Company Name, Industry (dropdown), Investment Required, Expected ROI, Risk Level selector, Description
-- `TextFormField` validators on all inputs
-- On success: deal is instantly prepended to the list in BLoC state — no reload needed
+### 🏢 Corporate
 
-### 🗂️ My Deals (Corporate)
+#### 📊 Dashboard
+- Stats row: Total Deals / Open / Closed — live from `DealBloc` state
+- Investor interest counter card with a mini bar chart visualisation
+- **POST NEW DEAL** CTA button with animated navigation
+- Recent deals preview list (latest 2 deals)
+- Market Insights banner with a custom `CustomPainter` wave background
+
+#### 📁 Post New Deal
+- Full form: Title, Company Name, Industry (dropdown), Investment Required (₹), Expected ROI (%), Risk Level selector, Description
+- `TextFormField` validators on every input field
+- On success: new deal is instantly prepended to the list in `DealBloc` state — no reload needed
+
+#### 🗂️ My Deals
 - Portfolio banner with Total / Open / Closed counts
-- Filter pills (All / Open / Closed)
-- Per-deal actions: **Close Deal**, **Reopen**, **Delete** — all with confirmation dialogs
-- Funding progress bar (visual indicator per deal)
-
-### 👤 Profile (Both Roles)
-- Avatar with initials, name, email, role chip
-- Info card (Name / Email / Role)
-- Logout button — clears session and navigates back to Sign In
+- Filter pills to quickly toggle between All / Open / Closed deals
+- Funding progress bar as a visual indicator per deal
+- Per-deal actions with confirmation dialogs:
+  - **Close Deal** — marks deal as Closed
+  - **Reopen** — marks a Closed deal back to Open
+  - **Delete** — permanently removes the deal
 
 ---
 
@@ -267,7 +279,7 @@ dependencies:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/investor_deal_management.git
+git clone https://github.com/pratikekande/Investor_Deal_Management
 cd investor_deal_management
 
 # 2. Install dependencies
